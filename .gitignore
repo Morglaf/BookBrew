@@ -27,3 +27,9 @@ yarn-error.log*
 *.tmp
 *.temp
 .cache/
+
+# Format Dora (privé)
+**/typeset/**/*dora*
+**/typeset/layout/fonts/FeENsc2.ttf
+**/typeset/layout/fonts/FeFCit2.ttf
+**/typeset/layout/fonts/FeFCrm2.ttf

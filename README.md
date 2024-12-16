@@ -1,81 +1,104 @@
 # BookBrew
 
-BookBrew est un plugin Obsidian puissant conçu pour les auteurs, éditeurs et designers de livres qui exigent une précision dans la composition de documents. Il transforme vos notes Markdown en livres professionnellement composés en utilisant des techniques LaTeX avancées.
+An Obsidian plugin for creating beautiful books from your notes using LaTeX.
 
-## Fonctionnalités
+## Features
 
-- 🎨 Utilisation de templates LaTeX personnalisables
-- 📑 Imposition automatique des pages (incluant l'imposition à cheval)
-- 📚 Génération automatique de couvertures avec calcul de l'épaisseur de la tranche
-- 🔄 Champs dynamiques basés sur le YAML frontmatter
-- 🌍 Interface multilingue (EN, FR, ES, DE)
+- Convert your Markdown notes into professionally typeset books
+- Multiple layout templates for different book formats
+- Support for various imposition schemes (signatures, spreads)
+- Cover generator with spine width calculation
+- Dynamic fields for customizing your book's metadata
+- Multiple language support (English, French, Spanish, German)
 
-## Prérequis
+## Requirements
 
-- Obsidian v0.15.0 ou supérieur
-- Une distribution LaTeX installée sur votre système (TeX Live recommandé)
-- Les packages LaTeX nécessaires (listés ci-dessous)
+The plugin requires the following external tools to be installed on your system:
+
+### XeLaTeX
+
+XeLaTeX is used for typesetting your book. You can install it by:
+- Windows: Install [MiKTeX](https://miktex.org/download) or [TeX Live](https://tug.org/texlive/)
+- macOS: Install [MacTeX](https://www.tug.org/mactex/)
+- Linux: Install TeX Live using your package manager
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install texlive-xetex
+  ```
+
+### Pandoc
+
+Pandoc is used for converting Markdown to LaTeX. Install it from:
+- Windows: [Pandoc installer](https://pandoc.org/installing.html)
+- macOS: `brew install pandoc`
+- Linux: 
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install pandoc
+  ```
+
+### PDFtk
+
+PDFtk is used for PDF manipulation (imposition, cover generation). Install it from:
+- Windows: [PDFtk Server](https://www.pdflabs.com/tools/pdftk-server/)
+- macOS: `brew install pdftk-java`
+- Linux:
+  ```bash
+  # Ubuntu/Debian
+  sudo apt install pdftk-java
+  ```
 
 ## Installation
 
-1. Dans Obsidian, allez dans Paramètres > Plugins tiers
-2. Cliquez sur "Parcourir" et recherchez "BookBrew"
-3. Installez le plugin
-4. Activez le plugin dans la liste des plugins installés
+1. Open Obsidian Settings
+2. Go to Community Plugins and disable Safe Mode
+3. Click Browse and search for "BookBrew"
+4. Install the plugin
+5. Enable the plugin in your list of installed plugins
 
 ## Configuration
 
-1. Allez dans les paramètres du plugin
-2. Définissez la langue de l'interface
-3. Configurez le template LaTeX par défaut
-4. Définissez le chemin d'exportation par défaut
-5. Ajustez les autres options selon vos besoins
+1. Open the plugin settings
+2. Set the paths to your LaTeX, Pandoc, and PDFtk installations if they're not in your system PATH
+3. Choose your preferred language
+4. Configure default paper thickness for spine width calculation
+5. Choose whether to keep temporary files for debugging
 
-## Utilisation
+## Usage
 
-1. Ouvrez un fichier Markdown contenant votre manuscrit
-2. Assurez-vous que le frontmatter YAML contient les champs nécessaires
-3. Ouvrez le panneau BookBrew
-4. Sélectionnez votre template et vos options
-5. Cliquez sur "Exporter" pour générer votre PDF
+1. Click the beer icon in the ribbon to open the BookBrew panel
+2. Select a layout template for your book
+3. Fill in the dynamic fields (title, author, etc.)
+4. Choose an imposition scheme if needed
+5. Set paper thickness for spine calculation
+6. Click Export to generate your book
+7. Optionally, generate a cover with the correct spine width
 
-### Structure YAML recommandée
+## Templates
 
-```yaml
----
-titre: Mon Livre
-auteur: John Doe
-edition: Première édition
-imagecouv: chemin/vers/image.jpg
----
-```
+The plugin comes with several built-in templates:
+- A5 format with Garamond font
+- Barsino A5 format with Garamond font
 
-## Templates LaTeX
+Templates are located in `.obsidian/plugins/bookbrew/typeset/layout/`
 
-Les templates sont stockés dans le dossier `typeset/layout`. Vous pouvez ajouter vos propres templates en suivant la structure existante.
+## Imposition Schemes
 
-### Templates d'imposition
+Available imposition schemes:
+- A5 on A3 (8 pages per signature)
+- A5 on A4 (4 pages per signature)
+- Barsino A5 on A4 (4 pages per signature or spread)
 
-Les fichiers d'imposition sont stockés dans `typeset/impose`. Ils définissent comment les pages seront arrangées pour l'impression.
+Imposition files are in `.obsidian/plugins/bookbrew/typeset/impose/`
 
-## Calculs d'épaisseur
+## Cover Templates
 
-Le plugin inclut des calculs automatiques pour :
-- L'épaisseur de la tranche basée sur le nombre de pages et l'épaisseur du papier
-- Les ajustements pour l'imposition à cheval
+Cover templates are available for:
+- A5 format on A3
+- Barsino A5 format on A3
 
-## Support
+Cover templates are in `.obsidian/plugins/bookbrew/typeset/cover/`
 
-- [Documentation complète](https://github.com/votre-repo/bookbrew/wiki)
-- [Signaler un problème](https://github.com/votre-repo/bookbrew/issues)
-- [Forum de discussion](https://github.com/votre-repo/bookbrew/discussions)
+## Contributing
 
-## Licence
-
-Ce projet est sous licence GNU GPL v3. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## Remerciements
-
-- L'équipe Obsidian pour leur excellent travail
-- La communauté LaTeX pour leurs outils et documentation
-- Tous les contributeurs au projet
+Feel free to submit issues and enhancement requests!

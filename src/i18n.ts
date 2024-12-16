@@ -6,19 +6,14 @@ export interface Translations {
     };
     settings: {
         language: string;
-        defaultTemplate: string;
-        paperThickness: string;
-        outputPath: string;
-        keepTempFiles: string;
-        defaultImposition: string;
         latexPath: string;
         latexSection: string;
         pandocPath: string;
         pandocSection: string;
         pdftkPath: string;
         pdftkSection: string;
-        defaultCover: string;
-        coverSection: string;
+        generalSection: string;
+        keepTempFiles: string;
     };
     view: {
         title: string;
@@ -47,19 +42,14 @@ const en: Translations = {
     },
     settings: {
         language: "Language",
-        defaultTemplate: "Default LaTeX Template",
-        paperThickness: "Paper Thickness (mm)",
-        outputPath: "Output Path",
-        keepTempFiles: "Keep Temporary Files",
-        defaultImposition: "Default Imposition Template",
         latexPath: "XeLaTeX installation path (leave empty to use system PATH)",
         latexSection: "XeLaTeX configuration",
         pandocPath: "Pandoc installation path (leave empty to use system PATH)",
         pandocSection: "Pandoc configuration",
         pdftkPath: "PDFtk installation path (leave empty to use system PATH)",
         pdftkSection: "PDFtk configuration",
-        defaultCover: "Default Cover Template",
-        coverSection: "Cover configuration"
+        generalSection: "General options",
+        keepTempFiles: "Keep temporary files"
     },
     view: {
         title: "LaTeX Template",
@@ -88,19 +78,14 @@ const fr: Translations = {
     },
     settings: {
         language: "Langue",
-        defaultTemplate: "Modèle LaTeX par défaut",
-        paperThickness: "Épaisseur du papier (mm)",
-        outputPath: "Chemin d'exportation",
-        keepTempFiles: "Conserver les fichiers temporaires",
-        defaultImposition: "Modèle d'imposition par défaut",
         latexPath: "Chemin d'installation XeLaTeX (laisser vide pour utiliser le PATH système)",
         latexSection: "Configuration XeLaTeX",
         pandocPath: "Chemin d'installation Pandoc (laisser vide pour utiliser le PATH système)",
         pandocSection: "Configuration Pandoc",
         pdftkPath: "Chemin d'installation PDFtk (laisser vide pour utiliser le PATH système)",
         pdftkSection: "Configuration PDFtk",
-        defaultCover: "Modèle de couverture par défaut",
-        coverSection: "Configuration de la couverture"
+        generalSection: "Options générales",
+        keepTempFiles: "Conserver les fichiers temporaires"
     },
     view: {
         title: "Modèle LaTeX",
@@ -129,19 +114,14 @@ const es: Translations = {
     },
     settings: {
         language: "Idioma",
-        defaultTemplate: "Plantilla LaTeX predeterminada",
-        paperThickness: "Grosor del papel (mm)",
-        outputPath: "Ruta de exportación",
-        keepTempFiles: "Mantener archivos temporales",
-        defaultImposition: "Plantilla de imposición predeterminada",
-        latexPath: "Ruta de instalación de LaTeX (dejar vacío para usar PATH del sistema)",
-        latexSection: "Configuración de LaTeX",
+        latexPath: "Ruta de instalación de XeLaTeX (dejar vacío para usar PATH del sistema)",
+        latexSection: "Configuración de XeLaTeX",
         pandocPath: "Ruta de instalación de Pandoc (dejar vacío para usar PATH del sistema)",
         pandocSection: "Configuración de Pandoc",
         pdftkPath: "Ruta de instalación de PDFtk (dejar vacío para usar PATH del sistema)",
         pdftkSection: "Configuración de PDFtk",
-        defaultCover: "Plantilla de portada predeterminada",
-        coverSection: "Configuración de la portada"
+        generalSection: "Opciones generales",
+        keepTempFiles: "Mantener archivos temporales"
     },
     view: {
         title: "Plantilla LaTeX",
@@ -170,19 +150,14 @@ const de: Translations = {
     },
     settings: {
         language: "Sprache",
-        defaultTemplate: "Standard-LaTeX-Vorlage",
-        paperThickness: "Papierdicke (mm)",
-        outputPath: "Ausgabepfad",
-        keepTempFiles: "Temporäre Dateien behalten",
-        defaultImposition: "Standard-Impositionsvorlage",
         latexPath: "XeLaTeX-Installationspfad (leer lassen für System-PATH)",
         latexSection: "XeLaTeX-Konfiguration",
         pandocPath: "Pandoc-Installationspfad (leer lassen für System-PATH)",
         pandocSection: "Pandoc-Konfiguration",
         pdftkPath: "PDFtk-Installationspfad (leer lassen für System-PATH)",
         pdftkSection: "PDFtk-Konfiguration",
-        defaultCover: "Standard-Umschlagvorlage",
-        coverSection: "Umschlagkonfiguration"
+        generalSection: "Allgemeine Optionen",
+        keepTempFiles: "Temporäre Dateien behalten"
     },
     view: {
         title: "LaTeX-Vorlage",

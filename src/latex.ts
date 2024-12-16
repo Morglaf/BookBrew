@@ -9,16 +9,22 @@ import { tmpdir } from 'os';
 
 const execAsync = promisify(exec);
 
-export interface LaTeXTemplate {
+interface Template {
     name: string;
     path: string;
-    dynamicFields: string[];
+    content?: string;
 }
 
-export interface ImpositionTemplate {
+interface Imposition {
     name: string;
     path: string;
-    format: string;
+    content?: string;
+}
+
+interface Cover {
+    name: string;
+    path: string;
+    content?: string;
 }
 
 export class LaTeXManager {
@@ -30,6 +36,9 @@ export class LaTeXManager {
     private isPandocAvailable: boolean = false;
     private isPdftkAvailable: boolean = false;
     private vault: Vault;
+    public templates: Template[] = [];
+    public impositions: Imposition[] = [];
+    public covers: Template[] = [];
 
     constructor(settings: BookBrewSettings, vault: Vault) {
         this.settings = settings;
@@ -51,28 +60,31 @@ export class LaTeXManager {
         this.isPandocAvailable = await this.checkPandocAvailability();
         this.isPdftkAvailable = await this.checkPdftkAvailability();
         await this.initializeTypesetDirectories();
+        await this.loadTemplates();
+        await this.loadImpositions();
+        await this.loadCovers();
     }
 
     private async initializeTypesetDirectories(): Promise<void> {
         try {
             console.log('Initializing typeset directories...');
-            const baseDir = this.getFullPath('typeset');
+            const baseDir = join(this.getPluginPath(), 'typeset');
             console.log('Creating base directory:', baseDir);
             
-            if (!await this.vault.adapter.exists(baseDir)) {
-                await this.vault.adapter.mkdir(baseDir);
+            if (!existsSync(baseDir)) {
+                await fs.mkdir(baseDir, { recursive: true });
             }
 
             const dirs = [
-                this.getFullPath(this.templatesPath),
-                this.getFullPath(this.impositionsPath),
-                this.getFullPath(this.coversPath)
+                join(baseDir, 'layout'),
+                join(baseDir, 'impose'),
+                join(baseDir, 'cover')
             ];
 
             for (const dir of dirs) {
                 console.log('Creating directory:', dir);
-                if (!await this.vault.adapter.exists(dir)) {
-                    await this.vault.adapter.mkdir(dir);
+                if (!existsSync(dir)) {
+                    await fs.mkdir(dir, { recursive: true });
                 }
             }
         } catch (error) {
@@ -144,8 +156,8 @@ export class LaTeXManager {
             : 'pdftk';
     }
 
-    async loadTemplates(): Promise<LaTeXTemplate[]> {
-        const templates: LaTeXTemplate[] = [];
+    async loadTemplates(): Promise<Template[]> {
+        const templates: Template[] = [];
         try {
             const fullTemplatesPath = join(this.getPluginPath(), this.templatesPath);
             console.log('Checking templates path:', fullTemplatesPath);
@@ -165,11 +177,10 @@ export class LaTeXManager {
                     const filePath = join(fullTemplatesPath, file);
                     console.log('Loading template:', filePath);
                     const content = await fs.readFile(filePath, 'utf8');
-                    const dynamicFields = this.extractDynamicFields(content);
                     templates.push({
                         name: basename(file, '.tex'),
                         path: filePath,
-                        dynamicFields
+                        content
                     });
                 } catch (error) {
                     console.error(`Error loading template ${file}:`, error);
@@ -179,6 +190,7 @@ export class LaTeXManager {
             console.error('Error loading templates:', error);
         }
         
+        this.templates = templates;
         return templates;
     }
 
@@ -194,8 +206,8 @@ export class LaTeXManager {
         return Array.from(fields);
     }
 
-    async loadImpositions(): Promise<ImpositionTemplate[]> {
-        const impositions: ImpositionTemplate[] = [];
+    async loadImpositions(): Promise<Imposition[]> {
+        const impositions: Imposition[] = [];
         try {
             const fullImpositionsPath = join(this.getPluginPath(), this.impositionsPath);
             console.log('Checking impositions path:', fullImpositionsPath);
@@ -219,7 +231,7 @@ export class LaTeXManager {
                     impositions.push({
                         name: basename(file, '.tex'),
                         path: filePath,
-                        format
+                        content
                     });
                 } catch (error) {
                     console.error(`Error loading imposition ${file}:`, error);
@@ -229,6 +241,7 @@ export class LaTeXManager {
             console.error('Error loading impositions:', error);
         }
         
+        this.impositions = impositions;
         return impositions;
     }
 
@@ -290,11 +303,11 @@ export class LaTeXManager {
     }
 
     async generatePDF(
-        template: LaTeXTemplate,
+        template: Template,
         fields: { [key: string]: string },
         markdownContent: string,
         outputPath: string,
-        imposition?: ImpositionTemplate
+        imposition?: Imposition
     ): Promise<string> {
         if (!this.isLatexAvailable) {
             throw new Error('LaTeX is not available');
@@ -348,7 +361,7 @@ export class LaTeXManager {
     }
 
     async generateCover(
-        template: LaTeXTemplate,
+        template: Template,
         fields: { [key: string]: string },
         spineWidth: number,
         outputPath: string
@@ -623,8 +636,8 @@ export class LaTeXManager {
         }
     }
 
-    async loadCovers(): Promise<LaTeXTemplate[]> {
-        const covers: LaTeXTemplate[] = [];
+    async loadCovers(): Promise<Template[]> {
+        const covers: Template[] = [];
         try {
             const fullCoversPath = join(this.getPluginPath(), this.coversPath);
             console.log('Checking covers path:', fullCoversPath);
@@ -648,7 +661,7 @@ export class LaTeXManager {
                     covers.push({
                         name: basename(file, '.tex'),
                         path: filePath,
-                        dynamicFields
+                        content
                     });
                 } catch (error) {
                     console.error(`Error loading cover ${file}:`, error);
@@ -658,6 +671,7 @@ export class LaTeXManager {
             console.error('Error loading covers:', error);
         }
         
+        this.covers = covers;
         return covers;
     }
 } 

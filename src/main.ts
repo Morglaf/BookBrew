@@ -3,6 +3,7 @@ import { BookBrewView, VIEW_TYPE_BOOKBREW } from './view';
 import { BookBrewSettings, DEFAULT_SETTINGS } from './settings';
 import { Translations, loadTranslations } from './i18n';
 import { LaTeXManager } from './latex';
+import { addIcon } from 'obsidian';
 
 class BookBrewSettingTab extends PluginSettingTab {
 	private readonly plugin: BookBrewPlugin;
@@ -71,48 +72,8 @@ class BookBrewSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		// Section Couverture
-		containerEl.createEl('h3', { text: this.plugin.translations.settings.coverSection });
-
-		new Setting(containerEl)
-			.setName(this.plugin.translations.settings.defaultCover)
-			.addText(text => text
-				.setValue(this.plugin.settings.defaultCover || '')
-				.onChange(async (value) => {
-					this.plugin.settings.defaultCover = value || null;
-					await this.plugin.saveSettings();
-				}));
-
-		// Templates et options
-		containerEl.createEl('h3', { text: this.plugin.translations.settings.defaultTemplate });
-
-		new Setting(containerEl)
-			.setName(this.plugin.translations.settings.defaultTemplate)
-			.addText(text => text
-				.setValue(this.plugin.settings.defaultTemplate || '')
-				.onChange(async (value) => {
-					this.plugin.settings.defaultTemplate = value || null;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName(this.plugin.translations.settings.paperThickness)
-			.addText(text => text
-				.setValue(this.plugin.settings.paperThickness.toString())
-				.onChange(async (value) => {
-					const thickness = parseFloat(value) || 0;
-					this.plugin.settings.paperThickness = thickness;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName(this.plugin.translations.settings.outputPath)
-			.addText(text => text
-				.setValue(this.plugin.settings.outputPath)
-				.onChange(async (value) => {
-					this.plugin.settings.outputPath = value;
-					await this.plugin.saveSettings();
-				}));
+		// Options générales
+		containerEl.createEl('h3', { text: this.plugin.translations.settings.generalSection });
 
 		new Setting(containerEl)
 			.setName(this.plugin.translations.settings.keepTempFiles)
@@ -120,15 +81,6 @@ class BookBrewSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.keepTempFiles)
 				.onChange(async (value) => {
 					this.plugin.settings.keepTempFiles = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
-			.setName(this.plugin.translations.settings.defaultImposition)
-			.addText(text => text
-				.setValue(this.plugin.settings.defaultImposition || '')
-				.onChange(async (value) => {
-					this.plugin.settings.defaultImposition = value || null;
 					await this.plugin.saveSettings();
 				}));
 	}
@@ -153,8 +105,8 @@ export default class BookBrewPlugin extends Plugin {
 			(leaf) => new BookBrewView(leaf, this)
 		);
 
-		// Add ribbon icon
-		this.addRibbonIcon('book', this.translations.ribbonTooltip, () => {
+		// Add ribbon icon (livre avec une chope de bière)
+		this.addRibbonIcon('lucide-beer', this.translations.ribbonTooltip, () => {
 			this.activateView();
 		});
 
