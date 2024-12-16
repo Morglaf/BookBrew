@@ -1,0 +1,215 @@
+export interface Translations {
+    ribbonTooltip: string;
+    commands: {
+        openView: string;
+        exportPdf: string;
+    };
+    settings: {
+        language: string;
+        defaultTemplate: string;
+        paperThickness: string;
+        outputPath: string;
+        keepTempFiles: string;
+        defaultImposition: string;
+        latexPath: string;
+        latexSection: string;
+        pandocPath: string;
+        pandocSection: string;
+        pdftkPath: string;
+        pdftkSection: string;
+        defaultCover: string;
+        coverSection: string;
+    };
+    view: {
+        title: string;
+        template: string;
+        dynamicFields: string;
+        options: string;
+        imposition: string;
+        compensation: string;
+        paperThickness: string;
+        exportPath: string;
+        keepTemp: string;
+        export: string;
+        coverGenerator: string;
+        coverThickness: string;
+        generateCover: string;
+        latexNotFound: string;
+        pandocNotFound: string;
+    };
+}
+
+const en: Translations = {
+    ribbonTooltip: "Open BookBrew",
+    commands: {
+        openView: "Open BookBrew Panel",
+        exportPdf: "Export current note to PDF"
+    },
+    settings: {
+        language: "Language",
+        defaultTemplate: "Default LaTeX Template",
+        paperThickness: "Paper Thickness (mm)",
+        outputPath: "Output Path",
+        keepTempFiles: "Keep Temporary Files",
+        defaultImposition: "Default Imposition Template",
+        latexPath: "XeLaTeX installation path (leave empty to use system PATH)",
+        latexSection: "XeLaTeX configuration",
+        pandocPath: "Pandoc installation path (leave empty to use system PATH)",
+        pandocSection: "Pandoc configuration",
+        pdftkPath: "PDFtk installation path (leave empty to use system PATH)",
+        pdftkSection: "PDFtk configuration",
+        defaultCover: "Default Cover Template",
+        coverSection: "Cover configuration"
+    },
+    view: {
+        title: "LaTeX Template",
+        template: "Template",
+        dynamicFields: "Detected Dynamic Fields",
+        options: "Options",
+        imposition: "Imposition",
+        compensation: "Enable compensation for horse imposition",
+        paperThickness: "Paper Thickness (mm)",
+        exportPath: "Export Path",
+        keepTemp: "Keep Temporary Directory",
+        export: "Export",
+        coverGenerator: "Cover Generator",
+        coverThickness: "Spine Thickness (mm)",
+        generateCover: "Generate Cover",
+        latexNotFound: "LaTeX not found. Please check your LaTeX installation or specify the path in settings.",
+        pandocNotFound: "Pandoc not found. Please check your Pandoc installation or specify the path in settings."
+    }
+};
+
+const fr: Translations = {
+    ribbonTooltip: "Ouvrir BookBrew",
+    commands: {
+        openView: "Ouvrir le panneau BookBrew",
+        exportPdf: "Exporter la note actuelle en PDF"
+    },
+    settings: {
+        language: "Langue",
+        defaultTemplate: "Modèle LaTeX par défaut",
+        paperThickness: "Épaisseur du papier (mm)",
+        outputPath: "Chemin d'exportation",
+        keepTempFiles: "Conserver les fichiers temporaires",
+        defaultImposition: "Modèle d'imposition par défaut",
+        latexPath: "Chemin d'installation XeLaTeX (laisser vide pour utiliser le PATH système)",
+        latexSection: "Configuration XeLaTeX",
+        pandocPath: "Chemin d'installation Pandoc (laisser vide pour utiliser le PATH système)",
+        pandocSection: "Configuration Pandoc",
+        pdftkPath: "Chemin d'installation PDFtk (laisser vide pour utiliser le PATH système)",
+        pdftkSection: "Configuration PDFtk",
+        defaultCover: "Modèle de couverture par défaut",
+        coverSection: "Configuration de la couverture"
+    },
+    view: {
+        title: "Modèle LaTeX",
+        template: "Modèle",
+        dynamicFields: "Champs dynamiques détectés",
+        options: "Options",
+        imposition: "Imposition",
+        compensation: "Activer la compensation pour l'imposition à cheval",
+        paperThickness: "Épaisseur du papier (mm)",
+        exportPath: "Chemin d'exportation",
+        keepTemp: "Conserver le dossier temporaire",
+        export: "Exporter",
+        coverGenerator: "Générateur de couverture",
+        coverThickness: "Épaisseur de la tranche (mm)",
+        generateCover: "Générer la couverture",
+        latexNotFound: "LaTeX non trouvé. Veuillez vérifier votre installation LaTeX ou spécifier le chemin dans les paramètres.",
+        pandocNotFound: "Pandoc non trouvé. Veuillez vérifier votre installation Pandoc ou spécifier le chemin dans les paramètres."
+    }
+};
+
+const es: Translations = {
+    ribbonTooltip: "Abrir BookBrew",
+    commands: {
+        openView: "Abrir panel BookBrew",
+        exportPdf: "Exportar nota actual a PDF"
+    },
+    settings: {
+        language: "Idioma",
+        defaultTemplate: "Plantilla LaTeX predeterminada",
+        paperThickness: "Grosor del papel (mm)",
+        outputPath: "Ruta de exportación",
+        keepTempFiles: "Mantener archivos temporales",
+        defaultImposition: "Plantilla de imposición predeterminada",
+        latexPath: "Ruta de instalación de LaTeX (dejar vacío para usar PATH del sistema)",
+        latexSection: "Configuración de LaTeX",
+        pandocPath: "Ruta de instalación de Pandoc (dejar vacío para usar PATH del sistema)",
+        pandocSection: "Configuración de Pandoc",
+        pdftkPath: "Ruta de instalación de PDFtk (dejar vacío para usar PATH del sistema)",
+        pdftkSection: "Configuración de PDFtk",
+        defaultCover: "Plantilla de portada predeterminada",
+        coverSection: "Configuración de la portada"
+    },
+    view: {
+        title: "Plantilla LaTeX",
+        template: "Plantilla",
+        dynamicFields: "Campos dinámicos detectados",
+        options: "Opciones",
+        imposition: "Imposición",
+        compensation: "Activar compensación para imposición a caballo",
+        paperThickness: "Grosor del papel (mm)",
+        exportPath: "Ruta de exportación",
+        keepTemp: "Mantener directorio temporal",
+        export: "Exportar",
+        coverGenerator: "Generador de portada",
+        coverThickness: "Grosor del lomo (mm)",
+        generateCover: "Generar portada",
+        latexNotFound: "LaTeX no encontrado. Por favor, verifique su instalación de LaTeX o especifique la ruta en la configuración.",
+        pandocNotFound: "Pandoc no encontrado. Por favor, verifique su instalación de Pandoc o especifique la ruta en la configuración."
+    }
+};
+
+const de: Translations = {
+    ribbonTooltip: "BookBrew öffnen",
+    commands: {
+        openView: "BookBrew-Panel öffnen",
+        exportPdf: "Aktuelle Notiz als PDF exportieren"
+    },
+    settings: {
+        language: "Sprache",
+        defaultTemplate: "Standard-LaTeX-Vorlage",
+        paperThickness: "Papierdicke (mm)",
+        outputPath: "Ausgabepfad",
+        keepTempFiles: "Temporäre Dateien behalten",
+        defaultImposition: "Standard-Impositionsvorlage",
+        latexPath: "XeLaTeX-Installationspfad (leer lassen für System-PATH)",
+        latexSection: "XeLaTeX-Konfiguration",
+        pandocPath: "Pandoc-Installationspfad (leer lassen für System-PATH)",
+        pandocSection: "Pandoc-Konfiguration",
+        pdftkPath: "PDFtk-Installationspfad (leer lassen für System-PATH)",
+        pdftkSection: "PDFtk-Konfiguration",
+        defaultCover: "Standard-Umschlagvorlage",
+        coverSection: "Umschlagkonfiguration"
+    },
+    view: {
+        title: "LaTeX-Vorlage",
+        template: "Vorlage",
+        dynamicFields: "Erkannte dynamische Felder",
+        options: "Optionen",
+        imposition: "Imposition",
+        compensation: "Kompensation für Sattelimposition aktivieren",
+        paperThickness: "Papierdicke (mm)",
+        exportPath: "Exportpfad",
+        keepTemp: "Temporäres Verzeichnis behalten",
+        export: "Exportieren",
+        coverGenerator: "Umschlaggenerator",
+        coverThickness: "Rückendicke (mm)",
+        generateCover: "Umschlag generieren",
+        latexNotFound: "LaTeX nicht gefunden. Bitte überprüfen Sie Ihre LaTeX-Installation oder geben Sie den Pfad in den Einstellungen an.",
+        pandocNotFound: "Pandoc nicht gefunden. Bitte überprüfen Sie Ihre Pandoc-Installation oder geben Sie den Pfad in den Einstellungen an."
+    }
+};
+
+const translations: { [key: string]: Translations } = {
+    en,
+    fr,
+    es,
+    de
+};
+
+export function loadTranslations(lang: string): Translations {
+    return translations[lang] || translations.en;
+} 
