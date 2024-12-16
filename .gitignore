@@ -30,6 +30,9 @@ yarn-error.log*
 
 # Format Dora (privé)
 **/typeset/**/dora*
+**/typeset/**/*dora*
+**/typeset/cover/IMfrench-dora6-couv-A4.tex
+**/typeset/layout/IMfrench-dora6-layout.tex
 **/typeset/layout/fonts/FeENsc2.ttf
 **/typeset/layout/fonts/FeFCit2.ttf
 **/typeset/layout/fonts/FeFCrm2.ttf
