@@ -36,4 +36,7 @@ yarn-error.log*
 **/typeset/layout/fonts/FeENsc2.ttf
 **/typeset/layout/fonts/FeFCit2.ttf
 **/typeset/layout/fonts/FeFCrm2.ttf
+**/typeset/cover/fonts/FeENsc2.ttf
+**/typeset/cover/fonts/FeFCit2.ttf
+**/typeset/cover/fonts/FeFCrm2.ttf
 anotes/

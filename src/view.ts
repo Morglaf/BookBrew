@@ -1,6 +1,9 @@
 import { ItemView, WorkspaceLeaf, ToggleComponent } from 'obsidian';
 import BookBrewPlugin from './main';
 import { BookBrewSettings } from './settings';
+import { join } from 'path';
+import { Notice } from 'obsidian';
+import { ExportOptions } from './services/export/ExportOptions';
 
 export const VIEW_TYPE_BOOKBREW = 'bookbrew-view';
 
@@ -10,6 +13,11 @@ export class BookBrewView extends ItemView {
     private thicknessSection: HTMLDivElement;
     private impositionSelect: HTMLSelectElement;
     private coverSelect: HTMLSelectElement;
+    private progressBar: HTMLProgressElement;
+    private progressText: HTMLDivElement;
+    private cancelButton: HTMLButtonElement;
+    private logContainer: HTMLDivElement;
+    private isExporting: boolean = false;
 
     constructor(leaf: WorkspaceLeaf, plugin: BookBrewPlugin) {
         super(leaf);
@@ -25,13 +33,72 @@ export class BookBrewView extends ItemView {
     }
 
     getIcon(): string {
-        return 'lucide-beer';
+        return 'bookbrew';
+    }
+
+    private createProgressSection(container: HTMLElement) {
+        const progressSection = container.createDiv({ cls: 'progress-section hidden' });
+        
+        const progressHeader = progressSection.createDiv({ cls: 'progress-header' });
+        this.progressText = progressHeader.createDiv({ cls: 'progress-text' });
+        
+        this.cancelButton = progressHeader.createEl('button', {
+            text: this.plugin.translations.view.cancel,
+            cls: 'cancel-button'
+        });
+        this.cancelButton.addEventListener('click', () => {
+            if (this.isExporting) {
+                this.plugin.exportCoordinator.cancelExport();
+            }
+        });
+
+        this.progressBar = progressSection.createEl('progress', {
+            cls: 'progress-bar',
+            attr: { max: '100', value: '0' }
+        });
+
+        this.logContainer = progressSection.createDiv({ cls: 'log-container' });
+    }
+
+    private updateProgress(progress: number, message: string) {
+        if (this.progressBar && this.progressText) {
+            this.progressBar.value = progress;
+            this.progressText.textContent = message;
+        }
+    }
+
+    private addLogMessage(message: string) {
+        const logLine = this.logContainer.createDiv({ cls: 'log-line' });
+        logLine.textContent = message;
+        this.logContainer.scrollTop = this.logContainer.scrollHeight;
+    }
+
+    private showProgress() {
+        const progressSection = this.containerEl.querySelector('.progress-section');
+        if (progressSection) {
+            progressSection.removeClass('hidden');
+        }
+        this.isExporting = true;
+    }
+
+    private hideProgress() {
+        const progressSection = this.containerEl.querySelector('.progress-section');
+        if (progressSection) {
+            progressSection.addClass('hidden');
+        }
+        this.isExporting = false;
+        if (this.logContainer) {
+            this.logContainer.empty();
+        }
     }
 
     async onOpen() {
-        const container = this.containerEl.children[1];
+        const container = this.containerEl.children[1] as HTMLElement;
         container.empty();
         container.createEl('h2', { text: this.plugin.translations.view.title });
+
+        // Créer la section de progression
+        this.createProgressSection(container);
 
         // Template section
         const templateSection = container.createDiv();
@@ -235,16 +302,114 @@ export class BookBrewView extends ItemView {
             }
         });
 
+        // Export button
         const exportButton = exportSection.createEl('button', {
             text: this.plugin.translations.view.export,
             cls: 'export-button'
         });
-        exportButton.addEventListener('click', () => {
+        exportButton.addEventListener('click', async () => {
             const exportPath = exportPathInput.value;
             if (!exportPath) {
+                new Notice('No export path selected');
                 return;
             }
-            // TODO: Continuer avec l'export
+
+            const selectedTemplate = templateSelect.value;
+            if (!selectedTemplate) {
+                new Notice('No template selected');
+                return;
+            }
+
+            const template = this.plugin.latex.findTemplate(selectedTemplate);
+            if (!template) {
+                new Notice('Template not found');
+                return;
+            }
+
+            const activeFile = this.app.workspace.getActiveFile();
+            if (!activeFile) {
+                new Notice('No active file');
+                return;
+            }
+
+            try {
+                this.showProgress();
+
+                // Configurer le callback pour les événements d'export
+                this.plugin.exportCoordinator.setEventCallback((event) => {
+                    switch (event.type) {
+                        case 'progress':
+                            if (event.progress !== undefined) {
+                                this.updateProgress(event.progress, event.message);
+                            }
+                            break;
+                        case 'log':
+                            this.addLogMessage(event.message);
+                            break;
+                        case 'error':
+                            this.hideProgress();
+                            new Notice(`Export failed: ${event.message}`);
+                            break;
+                        case 'complete':
+                            this.hideProgress();
+                            new Notice('Export completed successfully');
+                            break;
+                        case 'cancelled':
+                            this.hideProgress();
+                            new Notice('Export cancelled');
+                            break;
+                    }
+                });
+
+                // Récupérer les champs dynamiques du YAML frontmatter
+                const fileContent = await this.app.vault.read(activeFile);
+                const yamlRegex = /^---\n([\s\S]*?)\n---/;
+                const match = fileContent.match(yamlRegex);
+                const dynamicFields: Record<string, any> = {};
+                
+                if (match) {
+                    const yamlContent = match[1];
+                    const lines = yamlContent.split('\n');
+                    for (const line of lines) {
+                        const [key, ...valueParts] = line.split(':');
+                        if (key && valueParts.length > 0) {
+                            const value = valueParts.join(':').trim();
+                            if (value) {
+                                dynamicFields[key.trim()] = value;
+                            }
+                        }
+                    }
+                }
+
+                // Préparer les options d'export
+                const exportOptions = {
+                    file: activeFile,
+                    template: template,
+                    dynamicFields: dynamicFields,
+                    toggles: this.plugin.settings.toggles,
+                    outputPath: join(exportPath, `${activeFile.basename}.pdf`)
+                } as ExportOptions;
+
+                // Ajouter l'imposition si sélectionnée
+                const selectedImposition = impositionSelect.value;
+                if (selectedImposition) {
+                    const imposition = this.plugin.latex.impositions.find(
+                        imp => imp.name === selectedImposition
+                    );
+                    if (imposition) {
+                        exportOptions.imposition = imposition;
+                        if (imposition.type === 'spread') {
+                            exportOptions.paperThickness = this.plugin.settings.paperThickness;
+                        }
+                    }
+                }
+
+                // Lancer l'export
+                await this.plugin.exportCoordinator.export(exportOptions);
+            } catch (error) {
+                this.hideProgress();
+                new Notice(`Export failed: ${error.message}`);
+            }
         });
 
         // Cover Generator section
@@ -291,11 +456,60 @@ export class BookBrewView extends ItemView {
             await this.plugin.saveSettings();
         });
         
+        // Generate Cover button
         const generateCoverButton = coverSection.createEl('button', {
             text: this.plugin.translations.view.generateCover
         });
-        generateCoverButton.addEventListener('click', () => {
-            // TODO: Implement cover generation
+        generateCoverButton.addEventListener('click', async () => {
+            const exportPath = exportPathInput.value;
+            if (!exportPath) {
+                new Notice('No export path selected');
+                return;
+            }
+
+            const selectedCover = coverSelect.value;
+            if (!selectedCover) {
+                new Notice('No cover template selected');
+                return;
+            }
+
+            const cover = this.plugin.latex.covers.find(c => c.name === selectedCover);
+            if (!cover) {
+                new Notice('Cover template not found');
+                return;
+            }
+
+            const activeFile = this.app.workspace.getActiveFile();
+            if (!activeFile) {
+                new Notice('No active file');
+                return;
+            }
+
+            try {
+                // Récupérer les champs dynamiques du YAML frontmatter
+                const dynamicFields = await this.plugin.latex.parseYAMLFields(activeFile);
+
+                // Préparer les options d'export
+                const exportOptions = {
+                    file: activeFile,
+                    template: { name: '', path: '', content: '' }, // Template vide car non utilisé pour la couverture
+                    dynamicFields: {}, // Vide car non utilisé pour la couverture
+                    toggles: {}, // Vide car non utilisé pour la couverture
+                    cover: cover,
+                    coverFields: dynamicFields,
+                    coverThickness: this.plugin.settings.coverThickness,
+                    outputPath: join(exportPath, `${activeFile.basename}.pdf`)
+                };
+
+                // Générer la couverture
+                new Notice('Generating cover...');
+                const result = await this.plugin.exportCoordinator.export(exportOptions);
+                if (result.cover) {
+                    new Notice(`Cover generated: ${result.cover}`);
+                }
+            } catch (error) {
+                new Notice(`Cover generation failed: ${error.message}`);
+            }
         });
 
         // Écouter les changements de couverture
@@ -310,64 +524,6 @@ export class BookBrewView extends ItemView {
 
         // Mettre à jour les toggles lors du changement de template
         templateSelect.addEventListener('change', loadSelectedTemplate);
-
-        // Style pour les sections
-        const style = document.head.appendChild(document.createElement('style'));
-        style.textContent = `
-            .dynamic-fields {
-                background: var(--background-primary-alt);
-                border-radius: 4px;
-                padding: 10px;
-                margin-bottom: 15px;
-            }
-            .dynamic-fields p {
-                margin: 0;
-                font-family: var(--font-monospace);
-            }
-            .dynamic-fields .no-fields {
-                color: var(--text-muted);
-                font-style: italic;
-            }
-            .latex-toggles {
-                background: var(--background-primary-alt);
-                border-radius: 4px;
-                padding: 10px;
-                margin-bottom: 15px;
-            }
-            .latex-toggles .setting-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 5px 0;
-                border-bottom: 1px solid var(--background-modifier-border);
-            }
-            .latex-toggles .setting-item:last-child {
-                border-bottom: none;
-            }
-            .export-section {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin: 16px 0;
-            }
-            .export-path-container {
-                display: flex;
-                flex: 1;
-                gap: 4px;
-            }
-            .export-path-input {
-                flex: 1;
-                min-width: 0;
-                padding: 4px 8px;
-            }
-            .choose-folder-button {
-                padding: 4px 8px;
-                cursor: pointer;
-            }
-            .export-button {
-                padding: 4px 12px;
-            }
-        `;
 
         // Stocker les références pour la mise à jour
         this.impositionSelect = impositionSelect;
@@ -400,11 +556,4 @@ export class BookBrewView extends ItemView {
     async onClose() {
         // Nothing to clean up
     }
-}
-
-// Ajouter le style CSS pour la classe hidden
-document.head.appendChild(document.createElement('style')).textContent = `
-.hidden {
-    display: none;
-}
-`; 
+} 

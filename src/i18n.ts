@@ -32,6 +32,17 @@ export interface Translations {
         latexNotFound: string;
         pandocNotFound: string;
         none: string;
+        cancel: string;
+        exportProgress: {
+            starting: string;
+            converting: string;
+            compiling: string;
+            generatingCover: string;
+            applyingImposition: string;
+            completed: string;
+            failed: string;
+            cancelled: string;
+        };
         toggles: {
             coverPage: string;
             halfTitlePage: string;
@@ -76,6 +87,17 @@ const en: Translations = {
         latexNotFound: "LaTeX not found. Please check your LaTeX installation or specify the path in settings.",
         pandocNotFound: "Pandoc not found. Please check your Pandoc installation or specify the path in settings.",
         none: "None",
+        cancel: "Cancel",
+        exportProgress: {
+            starting: "Starting export...",
+            converting: "Converting Markdown to LaTeX...",
+            compiling: "Compiling LaTeX...",
+            generatingCover: "Generating cover...",
+            applyingImposition: "Applying imposition...",
+            completed: "Export completed successfully",
+            failed: "Export failed: {0}",
+            cancelled: "Export cancelled"
+        },
         toggles: {
             coverPage: "Cover Page",
             halfTitlePage: "Half Title Page",
@@ -120,6 +142,17 @@ const fr: Translations = {
         latexNotFound: "LaTeX non trouvé. Veuillez vérifier votre installation LaTeX ou spécifier le chemin dans les paramètres.",
         pandocNotFound: "Pandoc non trouvé. Veuillez vérifier votre installation Pandoc ou spécifier le chemin dans les paramètres.",
         none: "Non",
+        cancel: "Annuler",
+        exportProgress: {
+            starting: "Démarrage de l'export...",
+            converting: "Conversion du Markdown vers LaTeX...",
+            compiling: "Compilation LaTeX...",
+            generatingCover: "Génération de la couverture...",
+            applyingImposition: "Application de l'imposition...",
+            completed: "Export terminé avec succès",
+            failed: "Échec de l'export : {0}",
+            cancelled: "Export annulé"
+        },
         toggles: {
             coverPage: "Page de Garde",
             halfTitlePage: "Page de Demi-titre",
@@ -164,6 +197,17 @@ const es: Translations = {
         latexNotFound: "LaTeX no encontrado. Por favor, verifique su instalación de LaTeX o especifique la ruta en la configuración.",
         pandocNotFound: "Pandoc no encontrado. Por favor, verifique su instalación de Pandoc o especifique la ruta en la configuración.",
         none: "No",
+        cancel: "Cancelar",
+        exportProgress: {
+            starting: "Iniciando exportación...",
+            converting: "Convirtiendo Markdown a LaTeX...",
+            compiling: "Compilando LaTeX...",
+            generatingCover: "Generando portada...",
+            applyingImposition: "Aplicando imposición...",
+            completed: "Exportación completada con éxito",
+            failed: "Error en la exportación: {0}",
+            cancelled: "Exportación cancelada"
+        },
         toggles: {
             coverPage: "Página de Cubierta",
             halfTitlePage: "Página de Medio Título",
@@ -208,6 +252,17 @@ const de: Translations = {
         latexNotFound: "LaTeX nicht gefunden. Bitte überprüfen Sie Ihre LaTeX-Installation oder geben Sie den Pfad in den Einstellungen an.",
         pandocNotFound: "Pandoc nicht gefunden. Bitte überprüfen Sie Ihre Pandoc-Installation oder geben Sie den Pfad in den Einstellungen an.",
         none: "Nein",
+        cancel: "Abbrechen",
+        exportProgress: {
+            starting: "Export wird gestartet...",
+            converting: "Konvertiere Markdown zu LaTeX...",
+            compiling: "Kompiliere LaTeX...",
+            generatingCover: "Generiere Umschlag...",
+            applyingImposition: "Wende Imposition an...",
+            completed: "Export erfolgreich abgeschlossen",
+            failed: "Export fehlgeschlagen: {0}",
+            cancelled: "Export abgebrochen"
+        },
         toggles: {
             coverPage: "Umschlagseite",
             halfTitlePage: "Schmutztitel",

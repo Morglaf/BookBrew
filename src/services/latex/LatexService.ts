@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
 import { promises as fs } from 'fs';
+import { TFile, Vault } from 'obsidian';
 
 const execAsync = promisify(exec);
 
@@ -18,7 +19,13 @@ export class LatexService {
     private pandocPath: string;
     private pdftkPath: string;
 
-    constructor(pluginPath: string, latexPath: string = '', pandocPath: string = '', pdftkPath: string = '') {
+    constructor(
+        private vault: Vault,
+        pluginPath: string,
+        latexPath: string = '',
+        pandocPath: string = '',
+        pdftkPath: string = ''
+    ) {
         this.pluginPath = pluginPath;
         this.latexPath = latexPath;
         this.pandocPath = pandocPath;
@@ -126,5 +133,28 @@ export class LatexService {
     // Méthodes utilitaires
     calculateSpineWidth(pageCount: number, paperThickness: number): number {
         return pageCount * paperThickness;
+    }
+
+    async parseYAMLFields(file: TFile): Promise<Record<string, any>> {
+        const content = await this.vault.read(file);
+        const yamlRegex = /^---\n([\s\S]*?)\n---/;
+        const match = content.match(yamlRegex);
+        const fields: Record<string, any> = {};
+        
+        if (match) {
+            const yamlContent = match[1];
+            const lines = yamlContent.split('\n');
+            for (const line of lines) {
+                const [key, ...valueParts] = line.split(':');
+                if (key && valueParts.length > 0) {
+                    const value = valueParts.join(':').trim();
+                    if (value) {
+                        fields[key.trim()] = value;
+                    }
+                }
+            }
+        }
+        
+        return fields;
     }
 } 
