@@ -104,25 +104,24 @@
   \end{framedparagraph}%
 }
 
-\newif\ifPageGarde
-\PageGardefalse
-\newif\ifPageDemititre
-\PageDemititrefalse 
-\newif\ifPageTitre
-\PageTitrefalse
-\newif\ifTableMatiere
-\TableMatierefalse 
-\newif\ifTableMatierefin
-\TableMatierefinfalse
+\newif\ifCoverPage
+\CoverPagefalse
+\newif\ifHalfTitlePage
+\HalfTitlePagefalse 
+\newif\ifTitlePage
+\TitlePagefalse
+\newif\ifTableOfContents
+\TableOfContentsfalse 
+\newif\ifTableOfContentsEnd
+\TableOfContentsEndfalse
 
 \begin{document}
 
-
-\ifPageGarde
+\ifCoverPage
 \newpage
 \fi
 
-\ifPageDemititre
+\ifHalfTitlePage
 \begin{titlingpage}
   \thispagestyle{plain}
   \centering
@@ -130,7 +129,7 @@
 \end{titlingpage}
 \fi
 
-\ifPageTitre
+\ifTitlePage
     \begin{titlingpage}
         \thispagestyle{plain}
         \centering
@@ -140,19 +139,15 @@
     \end{titlingpage}
 \fi
 
-
-\ifTableMatiere
+\ifTableOfContents
 \tableofcontents
 \fi
-
-
-
 
 \sloppy
 \needspace{3\baselineskip}
 \input{content.tex}
 
-\ifTableMatierefin
+\ifTableOfContentsEnd
 \tableofcontents
 \fi
 \end{document}

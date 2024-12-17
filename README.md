@@ -78,7 +78,7 @@ PDFtk is used for PDF manipulation (imposition, cover generation). Install it fr
 
 The plugin comes with several built-in templates:
 - A5 format with Garamond font
-- Barsino A5 format with Garamond font
+- Brsnob A5 format with Garamond font
 
 Templates are located in `.obsidian/plugins/bookbrew/typeset/layout/`
 
@@ -87,7 +87,7 @@ Templates are located in `.obsidian/plugins/bookbrew/typeset/layout/`
 Available imposition schemes:
 - A5 on A3 (8 pages per signature)
 - A5 on A4 (4 pages per signature)
-- Barsino A5 on A4 (4 pages per signature or spread)
+- Brsnob A5 on A4 (4 pages per signature or spread)
 
 Imposition files are in `.obsidian/plugins/bookbrew/typeset/impose/`
 
@@ -95,9 +95,36 @@ Imposition files are in `.obsidian/plugins/bookbrew/typeset/impose/`
 
 Cover templates are available for:
 - A5 format on A3
-- Barsino A5 format on A3
+- Brsnob A5 format on A3
 
 Cover templates are in `.obsidian/plugins/bookbrew/typeset/cover/`
+
+## File Naming Convention
+
+LaTeX files follow a specific naming convention for each type:
+
+### Layout Files
+Format: `[name]-[format]-layout.tex`
+- `[name]`: Layout style identifier (can be a font or other identifier)
+- `[format]`: Book format (e.g., A5, brsnob)
+- Example: `Garamond-brsnoba5-layout.tex`
+
+### Imposition Files
+Format: `[format]-[output_format]-[page_count][type].tex`
+- `[format]`: Book format accepted by the layout
+- `[output_format]`: Printing paper format (e.g., A4, A3)
+- `[page_count]`: Number of pages per signature/spread
+- `[type]`: 
+  - `signature`: Standard imposition without thickness compensation
+  - `spread`: Saddle-stitched imposition with thickness compensation
+- Example: `brsnoba5-A4-4spread.tex`
+
+### Cover Files
+Format: `[name]-[format]-cover-[output_format].tex`
+- `[name]`: Cover style identifier
+- `[format]`: Book format
+- `[output_format]`: Printing paper format
+- Example: `Garamond-A5-cover-A3.tex`
 
 ## Contributing
 

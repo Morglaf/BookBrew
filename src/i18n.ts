@@ -31,6 +31,14 @@ export interface Translations {
         generateCover: string;
         latexNotFound: string;
         pandocNotFound: string;
+        none: string;
+        toggles: {
+            coverPage: string;
+            halfTitlePage: string;
+            titlePage: string;
+            tableOfContents: string;
+            tableOfContentsEnd: string;
+        };
     };
 }
 
@@ -66,7 +74,15 @@ const en: Translations = {
         coverThickness: "Spine Thickness (mm)",
         generateCover: "Generate Cover",
         latexNotFound: "LaTeX not found. Please check your LaTeX installation or specify the path in settings.",
-        pandocNotFound: "Pandoc not found. Please check your Pandoc installation or specify the path in settings."
+        pandocNotFound: "Pandoc not found. Please check your Pandoc installation or specify the path in settings.",
+        none: "None",
+        toggles: {
+            coverPage: "Cover Page",
+            halfTitlePage: "Half Title Page",
+            titlePage: "Title Page",
+            tableOfContents: "Table of Contents at Start",
+            tableOfContentsEnd: "Table of Contents at End"
+        },
     }
 };
 
@@ -102,7 +118,15 @@ const fr: Translations = {
         coverThickness: "Épaisseur de la tranche (mm)",
         generateCover: "Générer la couverture",
         latexNotFound: "LaTeX non trouvé. Veuillez vérifier votre installation LaTeX ou spécifier le chemin dans les paramètres.",
-        pandocNotFound: "Pandoc non trouvé. Veuillez vérifier votre installation Pandoc ou spécifier le chemin dans les paramètres."
+        pandocNotFound: "Pandoc non trouvé. Veuillez vérifier votre installation Pandoc ou spécifier le chemin dans les paramètres.",
+        none: "Non",
+        toggles: {
+            coverPage: "Page de Garde",
+            halfTitlePage: "Page de Demi-titre",
+            titlePage: "Page de Titre",
+            tableOfContents: "Table des Matières au Début",
+            tableOfContentsEnd: "Table des Matières à la Fin"
+        },
     }
 };
 
@@ -138,7 +162,15 @@ const es: Translations = {
         coverThickness: "Grosor del lomo (mm)",
         generateCover: "Generar portada",
         latexNotFound: "LaTeX no encontrado. Por favor, verifique su instalación de LaTeX o especifique la ruta en la configuración.",
-        pandocNotFound: "Pandoc no encontrado. Por favor, verifique su instalación de Pandoc o especifique la ruta en la configuración."
+        pandocNotFound: "Pandoc no encontrado. Por favor, verifique su instalación de Pandoc o especifique la ruta en la configuración.",
+        none: "No",
+        toggles: {
+            coverPage: "Página de Cubierta",
+            halfTitlePage: "Página de Medio Título",
+            titlePage: "Página de Título",
+            tableOfContents: "Índice al Principio",
+            tableOfContentsEnd: "Índice al Final"
+        },
     }
 };
 
@@ -174,7 +206,15 @@ const de: Translations = {
         coverThickness: "Rückendicke (mm)",
         generateCover: "Umschlag generieren",
         latexNotFound: "LaTeX nicht gefunden. Bitte überprüfen Sie Ihre LaTeX-Installation oder geben Sie den Pfad in den Einstellungen an.",
-        pandocNotFound: "Pandoc nicht gefunden. Bitte überprüfen Sie Ihre Pandoc-Installation oder geben Sie den Pfad in den Einstellungen an."
+        pandocNotFound: "Pandoc nicht gefunden. Bitte überprüfen Sie Ihre Pandoc-Installation oder geben Sie den Pfad in den Einstellungen an.",
+        none: "Nein",
+        toggles: {
+            coverPage: "Umschlagseite",
+            halfTitlePage: "Schmutztitel",
+            titlePage: "Titelseite",
+            tableOfContents: "Inhaltsverzeichnis am Anfang",
+            tableOfContentsEnd: "Inhaltsverzeichnis am Ende"
+        },
     }
 };
 

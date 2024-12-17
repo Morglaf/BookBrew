@@ -2,8 +2,8 @@ import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, MarkdownView, No
 import { BookBrewView, VIEW_TYPE_BOOKBREW } from './view';
 import { BookBrewSettings, DEFAULT_SETTINGS } from './settings';
 import { Translations, loadTranslations } from './i18n';
-import { LaTeXManager } from './latex';
-import { addIcon } from 'obsidian';
+import { LatexService } from './services/latex/LatexService';
+import { join } from 'path';
 
 class BookBrewSettingTab extends PluginSettingTab {
 	private readonly plugin: BookBrewPlugin;
@@ -83,20 +83,41 @@ class BookBrewSettingTab extends PluginSettingTab {
 					this.plugin.settings.keepTempFiles = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setName(this.plugin.translations.view.exportPath)
+			.addText(text => text
+				.setPlaceholder(this.app.vault.configDir)
+				.setValue(this.plugin.settings.lastExportPath)
+				.onChange(async (value) => {
+					this.plugin.settings.lastExportPath = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 }
 
 export default class BookBrewPlugin extends Plugin {
 	settings: BookBrewSettings;
 	translations: Translations;
-	latex: LaTeXManager;
+	latex: LatexService;
 
 	async onload() {
 		await this.loadSettings();
 		this.translations = loadTranslations(this.settings.language);
 		
-		// Initialize LaTeX manager
-		this.latex = new LaTeXManager(this.settings, this.app.vault);
+		// Initialize LaTeX service
+		const pluginPath = join(
+			(this.app.vault.adapter as any).basePath,
+			'.obsidian',
+			'plugins',
+			'bookbrew'
+		);
+		this.latex = new LatexService(
+			pluginPath,
+			this.settings.latexPath,
+			this.settings.pandocPath,
+			this.settings.pdftkPath
+		);
 		await this.initLatex();
 
 		// Register View
@@ -105,7 +126,7 @@ export default class BookBrewPlugin extends Plugin {
 			(leaf) => new BookBrewView(leaf, this)
 		);
 
-		// Add ribbon icon (livre avec une chope de bière)
+		// Add ribbon icon
 		this.addRibbonIcon('lucide-beer', this.translations.ribbonTooltip, () => {
 			this.activateView();
 		});
@@ -139,12 +160,6 @@ export default class BookBrewPlugin extends Plugin {
 
 	async initLatex() {
 		await this.latex.init();
-		const templates = await this.latex.loadTemplates();
-		const impositions = await this.latex.loadImpositions();
-		const covers = await this.latex.loadCovers();
-		console.log('Loaded templates:', templates);
-		console.log('Loaded impositions:', impositions);
-		console.log('Loaded covers:', covers);
 	}
 
 	async loadSettings() {
@@ -175,7 +190,7 @@ export default class BookBrewPlugin extends Plugin {
 
 	private async exportCurrentNote(view: MarkdownView) {
 		try {
-			// TODO: Implement export logic using LaTeX manager
+			// TODO: Implement export logic using LaTeX service
 			new Notice('Export not implemented yet');
 		} catch (error) {
 			new Notice(`Export failed: ${error.message}`);
