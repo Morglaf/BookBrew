@@ -105,7 +105,7 @@ export class LatexService {
 
             // Utiliser le fichier temporaire comme entrée
             await execAsync(
-                `${pandocCmd} -f markdown -t latex --wrap=none --top-level-division=chapter "${tempInputFile}" -o "${outputFile}"`
+                `${pandocCmd} -f markdown -t latex "${tempInputFile}" -o "${outputFile}"`
             );
 
             // Nettoyer le fichier temporaire

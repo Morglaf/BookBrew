@@ -50,10 +50,14 @@
 
 \renewcommand{\sectionmark}[1]{\markboth{#1}{#1}}
 
+% Configuration améliorée pour les images
+\graphicspath{{./}{../images/}{../../images/}}  % Ajoute des chemins de recherche pour les images
+\DeclareGraphicsExtensions{.pdf,.png,.jpg,.jpeg}  % Extensions d'images supportées
+
 % Commande pour redimensionner les images à la largeur maximale de la page
 \setkeys{Gin}{width=\linewidth, keepaspectratio}
 
-% Environnement personnalisé pour centrer les images
+% Environnement personnalisé pour centrer les images avec gestion d'erreurs
 \usepackage{float}
 \floatstyle{plain}
 \newfloat{inlinefigure}{H}{lof}
@@ -63,7 +67,11 @@
 \renewcommand{\includegraphics}[2][]{%
   \begin{inlinefigure}
     \centering
-    \oldincludegraphics[#1]{#2}
+    \IfFileExists{#2}{%
+      \oldincludegraphics[#1]{#2}%
+    }{%
+      \fbox{\parbox{0.8\linewidth}{\centering Image non trouvée : #2}}%
+    }%
   \end{inlinefigure}%
 }
 
@@ -86,6 +94,8 @@
   [] % Code after title
 
 \usepackage{mdframed} % pour créer des cadres
+
+\newcommand{\pandocbounded}[1]{#1}  % Définition de la commande pandocbounded
 
 % Créer un nouvel environnement pour les paragraphes encadrés
 \newmdenv[

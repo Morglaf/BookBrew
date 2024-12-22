@@ -5,6 +5,7 @@ import { spawn } from 'child_process';
 import { join } from 'path';
 import * as fs from 'fs/promises';
 import { tmpdir } from 'os';
+import { execAsync } from '../../utils/execAsync';
 
 interface ExportResult {
     pdf: string;
@@ -140,15 +141,25 @@ export class ExportCoordinator {
         }
     }
 
-    private async copyMarkdownImages(content: string): Promise<void> {
+    private async copyMarkdownImages(content: string): Promise<string> {
         try {
             // Créer le dossier images dans le dossier temporaire
             const tempImagesDir = join(this.tempDir, 'images');
             await fs.mkdir(tempImagesDir, { recursive: true });
 
+            // Créer une copie du contenu pour les modifications
+            let updatedContent = content;
+
             // Extraire tous les chemins d'images du Markdown
-            const imageRegex = /!\[.*?\]\((.*?)\)/g;
-            const matches = [...content.matchAll(imageRegex)];
+            // Format standard Markdown : ![alt](path)
+            const standardImageRegex = /!\[.*?\]\((.*?)\)/g;
+            // Format Obsidian : ![[path]]
+            const obsidianImageRegex = /!\[\[(.*?)\]\]/g;
+
+            const matches = [
+                ...content.matchAll(standardImageRegex),
+                ...content.matchAll(obsidianImageRegex)
+            ];
 
             for (const match of matches) {
                 const imagePath = match[1];
@@ -162,6 +173,12 @@ export class ExportCoordinator {
                             // Écrire l'image dans le dossier temporaire
                             const tempImagePath = join(tempImagesDir, file.name);
                             await fs.writeFile(tempImagePath, Buffer.from(imageContent));
+
+                            // Mettre à jour le chemin dans le contenu Markdown
+                            updatedContent = updatedContent.replace(
+                                match[0],
+                                `![](images/${file.name})`
+                            );
                         }
                     } catch (error) {
                         this.emitEvent({
@@ -171,6 +188,8 @@ export class ExportCoordinator {
                     }
                 }
             }
+
+            return updatedContent;
         } catch (error) {
             throw new Error(`Failed to copy Markdown images: ${error.message}`);
         }
@@ -178,20 +197,12 @@ export class ExportCoordinator {
 
     private async copyResources(): Promise<void> {
         try {
-            // Copier les polices du layout
-            const layoutFontsDir = join(this.pluginPath, 'typeset', 'layout', 'fonts');
-            const tempLayoutFontsDir = join(this.tempDir, 'fonts');
-            if (await this.directoryExists(layoutFontsDir)) {
-                await fs.mkdir(tempLayoutFontsDir, { recursive: true });
-                await this.copyDirectory(layoutFontsDir, tempLayoutFontsDir);
-            }
-
-            // Copier les polices de la couverture
-            const coverFontsDir = join(this.pluginPath, 'typeset', 'cover', 'fonts');
-            if (await this.directoryExists(coverFontsDir)) {
-                await fs.mkdir(tempLayoutFontsDir, { recursive: true });
-                await this.copyDirectory(coverFontsDir, tempLayoutFontsDir);
-            }
+            // Copier tout le dossier typeset
+            const typesetPath = join(this.pluginPath, 'typeset');
+            const tempTypesetPath = join(this.tempDir, 'typeset');
+            
+            // Copier récursivement le dossier typeset
+            await this.copyDirectory(typesetPath, tempTypesetPath);
         } catch (error) {
             throw new Error(`Failed to copy resources: ${error.message}`);
         }
@@ -227,152 +238,79 @@ export class ExportCoordinator {
         let fullLog = '';
 
         try {
-            // Ajouter les packages nécessaires pour le support Unicode
-            const contentWithUnicode = `\\documentclass{article}
-\\usepackage{xeCJK}
-\\usepackage{fontspec}
-\\usepackage[UTF8]{inputenc}
-\\usepackage[T1]{fontenc}
-\\XeTeXlinebreaklocale "ja"
-\\XeTeXlinebreakskip = 0pt plus 1pt
-\\setmainfont{Times New Roman}
-\\setCJKmainfont{IPAMincho}
-\\begin{document}
-${content}
-\\end{document}`;
-
             // Copier toutes les ressources nécessaires
             await this.copyResources();
 
-            // Écrire le contenu LaTeX dans un fichier temporaire
-            await fs.writeFile(tempFile, contentWithUnicode, 'utf8');
+            // Utiliser le template approprié
+            const layoutFile = join(this.tempDir, 'typeset', 'layout', options.template.name + '.tex');
+            let templateContent = await fs.readFile(layoutFile, 'utf8');
 
-            return new Promise((resolve, reject) => {
-                // Utiliser xelatex au lieu de pdflatex
-                const xelatex = spawn(join(this.latexPath, 'xelatex'), [
-                    '-interaction=nonstopmode',
-                    '-output-directory=' + this.tempDir,
-                    tempFile
-                ]);
+            // Remplacer les champs dynamiques
+            for (const [key, value] of Object.entries(options.dynamicFields || {})) {
+                templateContent = templateContent.replace(
+                    new RegExp(`\\{\\{${key}\\}\\}`, 'g'),
+                    value
+                );
+            }
 
-                let errorOutput = '';
-
-                xelatex.stdout.on('data', (data) => {
-                    const output = data.toString();
-                    fullLog += output;
-                    // Émettre les logs ligne par ligne pour une meilleure lisibilité
-                    output.split('\n').forEach((line: string) => {
-                        if (line.trim()) {
-                            this.emitEvent({
-                                type: 'log',
-                                message: line
-                            });
-                        }
-                    });
-                });
-
-                xelatex.stderr.on('data', (data) => {
-                    const output = data.toString();
-                    errorOutput += output;
-                    fullLog += output;
-                    // Émettre les erreurs ligne par ligne
-                    output.split('\n').forEach((line: string) => {
-                        if (line.trim()) {
-                            this.emitEvent({
-                                type: 'log',
-                                message: `ERROR: ${line}`
-                            });
-                        }
-                    });
-                });
-
-                xelatex.on('error', (error) => {
-                    // Émettre d'abord les logs
-                    this.emitEvent({
-                        type: 'log',
-                        message: '=== COMPILATION ERROR LOG START ==='
-                    });
-                    fullLog.split('\n').forEach((line: string) => {
-                        if (line.trim()) {
-                            this.emitEvent({
-                                type: 'log',
-                                message: line
-                            });
-                        }
-                    });
-                    this.emitEvent({
-                        type: 'log',
-                        message: '=== COMPILATION ERROR LOG END ==='
-                    });
-                    
-                    // Puis émettre l'erreur
-                    reject(new Error(`XeLaTeX process error: ${error.message}`));
-                });
-
-                xelatex.on('close', async (code) => {
-                    if (code === 0) {
-                        // Copier le fichier PDF généré vers le chemin de sortie
-                        const tempPdf = join(this.tempDir, 'main.pdf');
-                        await fs.copyFile(tempPdf, options.outputPath);
-                        resolve(options.outputPath);
-                    } else {
-                        // Lire le fichier log de LaTeX s'il existe
-                        try {
-                            const logFile = join(this.tempDir, 'main.log');
-                            const logContent = await fs.readFile(logFile, 'utf8');
-                            
-                            // Émettre le contenu du log de manière structurée
-                            this.emitEvent({
-                                type: 'log',
-                                message: '=== LATEX LOG FILE START ==='
-                            });
-                            logContent.split('\n').forEach((line: string) => {
-                                if (line.trim()) {
-                                    this.emitEvent({
-                                        type: 'log',
-                                        message: line
-                                    });
-                                }
-                            });
-                            this.emitEvent({
-                                type: 'log',
-                                message: '=== LATEX LOG FILE END ==='
-                            });
-
-                            // Rechercher les erreurs spécifiques dans le log
-                            const errorLines = logContent.split('\n')
-                                .filter(line => line.includes('!') || line.includes('Error') || line.includes('Fatal'))
-                                .join('\n');
-
-                            reject(new Error(`XeLaTeX failed with code ${code}.\nKey errors found:\n${errorLines || 'No specific errors found in log.'}`));
-                        } catch (e) {
-                            reject(new Error(`XeLaTeX failed with code ${code}. Could not read log file: ${e.message}`));
-                        }
-                    }
-                });
-
-                this.currentProcess = xelatex;
-            });
-        } catch (error) {
-            // Émettre les logs avant de lancer l'erreur
-            this.emitEvent({
-                type: 'log',
-                message: '=== FINAL ERROR LOG START ==='
-            });
-            fullLog.split('\n').forEach((line: string) => {
-                if (line.trim()) {
-                    this.emitEvent({
-                        type: 'log',
-                        message: line
-                    });
-                }
-            });
-            this.emitEvent({
-                type: 'log',
-                message: '=== FINAL ERROR LOG END ==='
-            });
+            // Extraire le contenu principal (tout ce qui n'est pas des commandes de préambule)
+            const beginDocIndex = content.indexOf('\\begin{document}');
+            const endDocIndex = content.indexOf('\\end{document}');
             
-            throw new Error(`LaTeX compilation failed: ${error.message}`);
+            let mainContent = '';
+            if (beginDocIndex !== -1 && endDocIndex !== -1) {
+                mainContent = content.substring(
+                    beginDocIndex + '\\begin{document}'.length,
+                    endDocIndex
+                ).trim();
+            } else {
+                mainContent = content.trim();
+            }
+
+            // Insérer le contenu dans le template
+            templateContent = templateContent.replace('\\input{content.tex}', mainContent);
+
+            // Écrire le fichier final
+            await fs.writeFile(tempFile, templateContent, 'utf8');
+
+            // Compiler avec XeLaTeX
+            const xelatex = this.latexPath || 'xelatex';
+            const { stdout, stderr } = await execAsync(
+                `${xelatex} -interaction=nonstopmode "${tempFile}"`,
+                { cwd: this.tempDir }
+            );
+
+            fullLog = stdout + '\n' + stderr;
+
+            // Vérifier si le PDF a été généré
+            const pdfFile = join(this.tempDir, 'main.pdf');
+            if (!await this.fileExists(pdfFile)) {
+                throw new Error('PDF file was not generated');
+            }
+
+            // S'assurer que le dossier de destination existe
+            const outputDir = join(options.outputPath, '..');
+            await fs.mkdir(outputDir, { recursive: true });
+
+            // Copier le PDF vers le dossier de sortie
+            try {
+                await fs.copyFile(pdfFile, options.outputPath);
+            } catch (error) {
+                throw new Error(`Failed to copy PDF to output path: ${error.message}`);
+            }
+
+            return options.outputPath;
+        } catch (error) {
+            throw new Error(`LaTeX compilation failed: ${error.message}\n\nFull log:\n${fullLog}`);
+        }
+    }
+
+    private async fileExists(path: string): Promise<boolean> {
+        try {
+            await fs.access(path);
+            return true;
+        } catch {
+            return false;
         }
     }
 
@@ -391,11 +329,11 @@ ${content}
         const outputFile = join(this.tempDir, 'output.tex');
 
         try {
-            // Copier les images du Markdown
-            await this.copyMarkdownImages(content);
+            // Copier les images du Markdown et obtenir le contenu mis à jour
+            const updatedContent = await this.copyMarkdownImages(content);
 
-            // Écrire le contenu Markdown dans un fichier temporaire
-            await fs.writeFile(inputFile, content, 'utf8');
+            // Écrire le contenu Markdown mis à jour dans un fichier temporaire
+            await fs.writeFile(inputFile, updatedContent, 'utf8');
 
             return new Promise((resolve, reject) => {
                 const pandoc = spawn(join(this.pandocPath, 'pandoc'), [
@@ -430,7 +368,7 @@ ${content}
                 pandoc.on('close', async (code) => {
                     if (code === 0) {
                         try {
-                            const output = await fs.readFile(outputFile, 'utf8');
+                            let output = await fs.readFile(outputFile, 'utf8');
                             resolve(output);
                         } catch (error) {
                             reject(new Error(`Failed to read pandoc output: ${error.message}`));
