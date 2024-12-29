@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "Transform Markdown notes into professionally typeset books using LaTeX templates, with support for imposition and cover generation.",
 	"author": "Morglaf",
-	"authorUrl": "https://github.com/Morglaf/BookBrew",
+	"authorUrl": "https://github.com/Morglaf",
 	"isDesktopOnly": true,
 	"icon": "book-dashed"
 }
