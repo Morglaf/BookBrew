@@ -20,7 +20,8 @@
 }
 
 .bookbrew-view h3 {
-    margin: 15px 0 10px;
+    margin: 0;
+    padding: 0;
     font-size: 1.1em;
 }
 
@@ -68,6 +69,8 @@
     border-radius: 4px;
     padding: 10px;
     margin-bottom: 15px;
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: 0 2px 4px var(--background-modifier-box-shadow);
 }
 
 .bookbrew-view .dynamic-field-item {
@@ -212,7 +215,7 @@
 /* Sections principales */
 .imposition-section,
 .cover-section {
-    margin: 30px 0;
+    margin-top: 16px;
 }
 
 .imposition-select-container,
@@ -233,11 +236,11 @@
     color: var(--text-normal);
 }
 
-.cover-fields-section {
+.fields-section {
     margin: 20px 0;
 }
 
-.cover-fields-section h4 {
+.fields-section h4 {
     margin-bottom: 10px;
     color: var(--text-muted);
     font-size: 0.9em;
@@ -327,25 +330,34 @@
 } 
 
 /* Style pour les sections avec titre et select alignés */
-.bookbrew-view .section-header {
+.section-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 15px 0 10px;
+    margin: 0;
+    padding: 8px 0;
 }
 
-.bookbrew-view .section-header h3 {
+.section-header h3 {
     margin: 0;
+    padding: 0;
     font-size: 1.1em;
     flex-shrink: 0;
+    min-width: 120px;
 }
 
-.bookbrew-view .section-header::after {
-    content: ":";
-    margin-right: 8px;
-}
-
-.bookbrew-view .section-header select {
+.section-header select {
     flex: 1;
     margin: 0;
+    padding: 4px 8px;
+    min-width: 0; /* Important pour éviter le débordement du flex */
+}
+
+/* Suppression des styles redondants */
+.bookbrew-view .section-header,
+.bookbrew-view .section-header h3,
+.bookbrew-view .section-header::after,
+.bookbrew-view .section-header select {
+    /* Ces styles sont maintenant hérités de .section-header */
+    all: revert;
 } 

@@ -20,7 +20,7 @@ export interface BookBrewSettings {
 }
 
 export const DEFAULT_SETTINGS: BookBrewSettings = {
-    language: 'en',
+    language: 'auto',
     latexPath: '',
     pandocPath: '',
     pdftkPath: '',

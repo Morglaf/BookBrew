@@ -1,3 +1,5 @@
+import { moment } from 'obsidian';
+
 export interface Translations {
     ribbonTooltip: string;
     commands: {
@@ -280,6 +282,35 @@ const translations: { [key: string]: Translations } = {
     de
 };
 
-export function loadTranslations(lang: string): Translations {
-    return translations[lang] || translations.en;
+// Fonction pour détecter la langue du système
+export function detectLanguage(): string {
+    // Utiliser la langue de moment.js qui est synchronisée avec Obsidian
+    const obsidianLocale = moment.locale();
+    
+    // Convertir la locale en code de langue simple
+    const lang = obsidianLocale.split('-')[0];
+    
+    // Vérifier si la langue est supportée
+    if (['en', 'fr', 'es', 'de'].includes(lang)) {
+        return lang;
+    }
+    
+    // Par défaut, utiliser l'anglais
+    return 'en';
+}
+
+export function loadTranslations(language: string): Translations {
+    // Si la langue est 'auto', détecter la langue du système
+    const actualLanguage = language === 'auto' ? detectLanguage() : language;
+    
+    switch (actualLanguage) {
+        case 'fr':
+            return fr;
+        case 'es':
+            return es;
+        case 'de':
+            return de;
+        default:
+            return en;
+    }
 } 

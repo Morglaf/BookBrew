@@ -2,20 +2,20 @@
 \usepackage{fontspec}
 \usepackage[french]{babel}
 \usepackage{microtype}
-\usepackage{graphicx}  % Ajout du package graphicx pour les images
-\usepackage{hyperref}  % Ajout du package hyperref pour les liens
+\usepackage{graphicx} 
+\usepackage{hyperref} 
 \usepackage{url}
 \usepackage[paperwidth=143.5mm, paperheight=210mm, margin=18mm, bottom=22mm, top=24mm, head=13.6pt,headsep=7pt, foot=13pt, footskip=14pt]{geometry}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
-\setmainfont{Garamond}[Scale=1.10] % Utilise Garamond comme police principale
+\setmainfont{Garamond}[Scale=1.10]
 \newfontfamily\titrefont{Garamond}
 \newfontfamily\headerfont[Scale=0.62]{Garamond}
 
 
 \usepackage{xcolor}
-\usepackage{pagecolor}
-\pagecolor{lightgray}  % Change the color to your desired shade of gray
+% \usepackage{pagecolor} % Change the color to your desired shade of gray
+% \pagecolor{lightgray}  % Change the color to your desired shade of gray
 
 \urlstyle{same}
 \hypersetup{
@@ -50,14 +50,10 @@
 
 \renewcommand{\sectionmark}[1]{\markboth{#1}{#1}}
 
-% Configuration améliorée pour les images
-\graphicspath{{./}{../images/}{../../images/}}  % Ajoute des chemins de recherche pour les images
-\DeclareGraphicsExtensions{.pdf,.png,.jpg,.jpeg}  % Extensions d'images supportées
-
-% Commande pour redimensionner les images à la largeur maximale de la page
+\graphicspath{{./}{../images/}{../../images/}} 
+\DeclareGraphicsExtensions{.pdf,.png,.jpg,.jpeg}
 \setkeys{Gin}{width=\linewidth, keepaspectratio}
 
-% Environnement personnalisé pour centrer les images avec gestion d'erreurs
 \usepackage{float}
 \floatstyle{plain}
 \newfloat{inlinefigure}{H}{lof}
@@ -93,11 +89,10 @@
   {} % Code before title
   [] % Code after title
 
-\usepackage{mdframed} % pour créer des cadres
+\usepackage{mdframed}
 
-\newcommand{\pandocbounded}[1]{#1}  % Définition de la commande pandocbounded
+\newcommand{\pandocbounded}[1]{#1} 
 
-% Créer un nouvel environnement pour les paragraphes encadrés
 \newmdenv[
   linewidth=0.5pt,
   roundcorner=5pt,
@@ -107,10 +102,9 @@
   innerbottommargin=5pt
 ]{framedparagraph}
 
-% Redéfinir l'environnement \paragraph pour ajouter un cadre
 \let\oldparagraph\paragraph
 \renewcommand{\paragraph}[1]{%
-  \begin{framedparagraph}[frametitle={#1}] % Utiliser l'environnement encadré avec le titre
+  \begin{framedparagraph}[frametitle={#1}]
   \end{framedparagraph}%
 }
 

@@ -23,6 +23,7 @@ class BookBrewSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName(this.plugin.translations.settings.language)
 			.addDropdown(dropdown => dropdown
+				.addOption('auto', 'Auto')
 				.addOption('en', 'English')
 				.addOption('fr', 'Français')
 				.addOption('es', 'Español')

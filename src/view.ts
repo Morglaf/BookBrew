@@ -134,8 +134,8 @@ export class BookBrewView extends ItemView {
         });
 
         // Dynamic Fields section for template
-        const fieldsSection = container.createDiv();
-        fieldsSection.createEl('h3', { text: this.plugin.translations.view.dynamicFields + ' (Template)' });
+        const fieldsSection = container.createDiv({ cls: 'fields-section' });
+        fieldsSection.createEl('h4', { text: this.plugin.translations.view.dynamicFields + ' (Template)' });
         const fieldsList = fieldsSection.createEl('div', { cls: 'dynamic-fields' });
 
         // Fonction pour extraire les champs dynamiques
@@ -167,7 +167,7 @@ export class BookBrewView extends ItemView {
                 const fieldsText = Array.from(fields).join(', ');
                 fieldsList.createEl('p', { text: fieldsText });
             } else {
-                fieldsList.createEl('p', { text: 'No dynamic fields detected', cls: 'no-fields' });
+                fieldsList.createEl('p', { text: this.plugin.translations.view.none, cls: 'no-fields' });
             }
         };
 
@@ -281,7 +281,7 @@ export class BookBrewView extends ItemView {
         coverSelect.appendChild(new Option(this.plugin.translations.view.none, ''));
 
         // Dynamic Fields section for cover
-        const coverFieldsSection = coverSection.createDiv({ cls: 'cover-fields-section' });
+        const coverFieldsSection = coverSection.createDiv({ cls: 'fields-section' });
         coverFieldsSection.createEl('h4', { text: this.plugin.translations.view.dynamicFields + ' (Cover)' });
         const coverFieldsList = coverFieldsSection.createEl('div', { cls: 'dynamic-fields' });
 
