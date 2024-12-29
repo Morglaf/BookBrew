@@ -5,7 +5,7 @@ An Obsidian plugin for creating beautiful books from your notes using LaTeX.
 ## Features
 
 - Convert your Markdown notes into professionally typeset books
-- Multiple layout templates for different book formats
+- Multiple layout templates for different book formats (currently only Brsnob A5 available, more coming soon)
 - Support for various imposition schemes (signatures, spreads)
 - Cover generator with spine width calculation
 - Dynamic fields for customizing your book's metadata
@@ -19,8 +19,8 @@ The plugin requires the following external tools to be installed on your system:
 
 XeLaTeX is used for typesetting your book. You can install it by:
 - Windows: Install [MiKTeX](https://miktex.org/download) or [TeX Live](https://tug.org/texlive/)
-- macOS: Install [MacTeX](https://www.tug.org/mactex/)
-- Linux: Install TeX Live using your package manager
+- macOS: Install [MacTeX](https://www.tug.org/mactex/) (compatibility not tested yet)
+- Linux: Install TeX Live using your package manager (compatibility not tested yet)
   ```bash
   # Ubuntu/Debian
   sudo apt install texlive-xetex
@@ -30,8 +30,8 @@ XeLaTeX is used for typesetting your book. You can install it by:
 
 Pandoc is used for converting Markdown to LaTeX. Install it from:
 - Windows: [Pandoc installer](https://pandoc.org/installing.html)
-- macOS: `brew install pandoc`
-- Linux: 
+- macOS: `brew install pandoc` (compatibility not tested yet)
+- Linux: (compatibility not tested yet)
   ```bash
   # Ubuntu/Debian
   sudo apt install pandoc
@@ -40,9 +40,9 @@ Pandoc is used for converting Markdown to LaTeX. Install it from:
 ### PDFtk
 
 PDFtk is used for PDF manipulation (imposition, cover generation). Install it from:
-- Windows: [PDFtk Server](https://www.pdflabs.com/tools/pdftk-server/)
-- macOS: `brew install pdftk-java`
-- Linux:
+- Windows: [PDFtk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/) (version 2.02 or later)
+- macOS: `brew install pdftk-java` (compatibility not tested yet)
+- Linux: (compatibility not tested yet)
   ```bash
   # Ubuntu/Debian
   sudo apt install pdftk-java
@@ -76,17 +76,16 @@ PDFtk is used for PDF manipulation (imposition, cover generation). Install it fr
 
 ## Templates
 
-The plugin comes with several built-in templates:
-- A5 format with Garamond font
+The plugin currently comes with one built-in template:
 - Brsnob A5 format with Garamond font
+
+More templates will be added in future updates.
 
 Templates are located in `.obsidian/plugins/bookbrew/typeset/layout/`
 
 ## Imposition Schemes
 
 Available imposition schemes:
-- A5 on A3 (8 pages per signature)
-- A5 on A4 (4 pages per signature)
 - Brsnob A5 on A4 (4 pages per signature or spread)
 
 Imposition files are in `.obsidian/plugins/bookbrew/typeset/impose/`
@@ -94,7 +93,6 @@ Imposition files are in `.obsidian/plugins/bookbrew/typeset/impose/`
 ## Cover Templates
 
 Cover templates are available for:
-- A5 format on A3
 - Brsnob A5 format on A3
 
 Cover templates are in `.obsidian/plugins/bookbrew/typeset/cover/`
