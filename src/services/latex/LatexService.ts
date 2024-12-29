@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import { join } from 'path';
 import { promises as fs } from 'fs';
 import { TFile, Vault } from 'obsidian';
+import { SpreadImposer } from '../export/SpreadImposer';
 
 const execAsync = promisify(exec);
 
@@ -125,9 +126,114 @@ export class LatexService {
         }
     }
 
-    async applyImposition(inputFile: string, imposition: Imposition, outputFile: string): Promise<void> {
-        // Implémenter la logique d'imposition ici
-        // Cela dépendra du type d'imposition (signature ou spread)
+    private async getPageCount(pdfPath: string): Promise<number> {
+        const pdftkCmd = this.getPdftkCommand();
+        try {
+            // Obtenir les données du PDF
+            const { stdout } = await execAsync(`"${pdftkCmd}" "${pdfPath}" dump_data`);
+            
+            // Chercher la ligne contenant NumberOfPages
+            const lines = stdout.split('\n');
+            for (const line of lines) {
+                if (line.includes('NumberOfPages')) {
+                    return parseInt(line.split(':')[1].trim());
+                }
+            }
+            throw new Error('Unable to determine page count');
+        } catch (error) {
+            throw new Error(`Failed to get page count: ${error.message}`);
+        }
+    }
+
+    private escapeLatexPath(path: string): string {
+        // Échapper les caractères spéciaux LaTeX dans les chemins
+        return path.replace(/([~#$%&{}_\[\]])/g, '\\$1');
+    }
+
+    async applyImposition(inputFile: string, imposition: Imposition, outputFile: string, paperThickness?: number): Promise<void> {
+        try {
+            // Créer un dossier temporaire pour l'imposition
+            const tempDir = join(this.pluginPath, 'temp', `imposition_${Date.now()}`);
+            await fs.mkdir(tempDir, { recursive: true });
+
+            // Extraire le nombre de pages par cahier du nom de l'imposition
+            const pagesPerUnitMatch = imposition.name.match(/(\d+)(signature|spread)/);
+            if (!pagesPerUnitMatch) {
+                throw new Error("Le nom de l'imposition doit contenir le nombre de pages par unité");
+            }
+            const pagesPerUnit = parseInt(pagesPerUnitMatch[1]);
+
+            // Obtenir le nombre de pages du PDF d'entrée
+            const currentPages = await this.getPageCount(inputFile);
+            console.log('Current page count:', currentPages);
+
+            // Calculer le nombre de pages nécessaires pour avoir des cahiers complets
+            const neededPages = Math.ceil(currentPages / pagesPerUnit) * pagesPerUnit;
+            console.log('Pages needed for complete signatures:', neededPages);
+
+            // Si nous avons besoin d'ajouter des pages blanches
+            let pdfToImpose = inputFile;
+            if (neededPages > currentPages) {
+                console.log('Adding blank pages:', neededPages - currentPages);
+                
+                // Créer une page blanche
+                const blankTexPath = join(tempDir, 'blank.tex');
+                const blankPdfPath = join(tempDir, 'blank.pdf');
+                const blankContent = `
+\\documentclass[]{article}
+\\usepackage[margin=0pt]{geometry}
+\\begin{document}
+\\thispagestyle{empty}
+\\phantom{x}
+\\end{document}
+`;
+                await fs.writeFile(blankTexPath, blankContent);
+                const latexCmd = this.getLatexCommand();
+                await execAsync(`"${latexCmd}" -interaction=nonstopmode "${blankTexPath}"`, { cwd: tempDir });
+
+                // Ajouter les pages blanches nécessaires
+                const paddedPdfPath = join(tempDir, 'padded.pdf');
+                const pdftkCmd = this.getPdftkCommand();
+                let command = `"${pdftkCmd}" A="${inputFile}" B="${blankPdfPath}" cat A`;
+                for (let i = currentPages + 1; i <= neededPages; i++) {
+                    command += ' B1';
+                }
+                command += ` output "${paddedPdfPath}"`;
+                await execAsync(command);
+                pdfToImpose = paddedPdfPath;
+            }
+
+            // Copier le fichier d'entrée (potentiellement complété) dans le dossier temporaire
+            const tempInputFile = join(tempDir, 'input.pdf');
+            await fs.copyFile(pdfToImpose, tempInputFile);
+
+            // Lire le contenu du fichier d'imposition
+            const impositionPath = join(this.pluginPath, imposition.path);
+            let impositionContent = await fs.readFile(impositionPath, 'utf8');
+
+            // Remplacer les variables dans le fichier d'imposition
+            const escapedInputPath = this.escapeLatexPath('input.pdf');
+            impositionContent = impositionContent
+                .replace(/\\def\\inputfile\{\}/g, `\\def\\inputfile{${escapedInputPath}}`)
+                .replace(/\\def\\compensation\{\}/g, `\\def\\compensation{${paperThickness || 0}mm}`);
+
+            // Écrire le fichier d'imposition modifié
+            const impositionFile = join(tempDir, 'imposition.tex');
+            await fs.writeFile(impositionFile, impositionContent);
+
+            // Compiler le fichier d'imposition
+            const latexCmd = this.getLatexCommand();
+            await execAsync(`"${latexCmd}" -interaction=nonstopmode "${impositionFile}"`, { cwd: tempDir });
+
+            // Copier le fichier résultant vers la destination
+            const resultFile = join(tempDir, 'imposition.pdf');
+            await fs.copyFile(resultFile, outputFile);
+
+            // Nettoyage
+            await fs.rm(tempDir, { recursive: true, force: true });
+        } catch (error) {
+            throw new Error(`Failed to apply imposition: ${error.message}`);
+        }
     }
 
     // Méthodes utilitaires
@@ -156,5 +262,14 @@ export class LatexService {
         }
         
         return fields;
+    }
+
+    // Nouvelles méthodes publiques pour les toggles
+    getTemplateToggles(template: Template): string[] {
+        return this.templateManager.getTemplateToggles(template);
+    }
+
+    async updateTemplateToggle(template: Template, toggleName: string, value: boolean): Promise<void> {
+        await this.templateManager.updateTemplateToggle(template, toggleName, value);
     }
 } 

@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, ToggleComponent } from 'obsidian';
+import { ItemView, WorkspaceLeaf, ToggleComponent, setIcon } from 'obsidian';
 import BookBrewPlugin from './main';
 import { BookBrewSettings } from './settings';
 import { join } from 'path';
@@ -33,7 +33,7 @@ export class BookBrewView extends ItemView {
     }
 
     getIcon(): string {
-        return 'bookbrew';
+        return 'book-dashed';
     }
 
     private createProgressSection(container: HTMLElement) {
@@ -95,15 +95,21 @@ export class BookBrewView extends ItemView {
     async onOpen() {
         const container = this.containerEl.children[1] as HTMLElement;
         container.empty();
-        container.createEl('h2', { text: this.plugin.translations.view.title });
+        
+        // Titre avec icône
+        const titleContainer = container.createDiv({ cls: 'bookbrew-title' });
+        const titleIcon = titleContainer.createSpan({ cls: 'bookbrew-title-icon' });
+        setIcon(titleIcon, 'book-dashed');
+        titleContainer.createEl('h2', { text: 'BookBrew' });
 
         // Créer la section de progression
         this.createProgressSection(container);
 
         // Template section
         const templateSection = container.createDiv();
-        templateSection.createEl('h3', { text: this.plugin.translations.view.template });
-        const templateSelect = templateSection.createEl('select');
+        const templateHeader = templateSection.createDiv({ cls: 'section-header' });
+        templateHeader.createEl('h3', { text: this.plugin.translations.view.template });
+        const templateSelect = templateHeader.createEl('select');
         
         // Ajouter les templates depuis le plugin
         if (this.plugin.latex.templates && this.plugin.latex.templates.length > 0) {
@@ -112,6 +118,10 @@ export class BookBrewView extends ItemView {
                 option.setAttribute('data-format', template.format || '');
                 templateSelect.appendChild(option);
             });
+            
+            // Initialiser le format sélectionné avec le premier template
+            const firstOption = templateSelect.options[0];
+            this.selectedFormat = firstOption.getAttribute('data-format') || '';
         }
 
         // Écouter les changements de template
@@ -168,9 +178,9 @@ export class BookBrewView extends ItemView {
 
         // Fonction pour extraire les toggles du fichier de mise en page
         const extractTogglesFromLayout = (layoutContent: string): string[] => {
-            const togglePattern = /\\newif\\if(\w+)/g;
-            const matches = [...layoutContent.matchAll(togglePattern)];
-            return matches.map(match => match[1]);
+            if (!layoutContent) return [];
+            const template = this.plugin.latex.findTemplate(templateSelect.value);
+            return template ? this.plugin.latex.getTemplateToggles(template) : [];
         };
 
         // Créer les toggles pour les options LaTeX
@@ -186,32 +196,20 @@ export class BookBrewView extends ItemView {
             toggleComponent.setValue(toggleState !== undefined ? toggleState : false);
 
             toggleComponent.onChange(async (value: boolean) => {
-                this.plugin.settings.toggles[name] = value;
-                await this.plugin.saveSettings();
-
-                if (templateSelect.value) {
-                    const template = this.plugin.latex.findTemplate(templateSelect.value);
-                    if (template && template.content) {
-                        const toggleValue = value ? 'true' : 'false';
-                        const togglePattern = new RegExp(`\\\\${name}${toggleValue === 'true' ? 'false' : 'true'}`, 'g');
-                        template.content = template.content.replace(togglePattern, `\\${name}${toggleValue}`);
-                        
-                        if (!template.content.includes(`\\${name}${toggleValue}`)) {
-                            const declarationPattern = new RegExp(`\\\\newif\\\\if${name}`);
-                            template.content = template.content.replace(
-                                declarationPattern,
-                                `\\newif\\if${name}\n\\${name}${toggleValue}`
-                            );
-                        }
-                        
-                        try {
-                            await this.plugin.latex.updateTemplateContent(template, template.content);
-                        } catch (error) {
-                            toggleComponent.setValue(!value);
-                            this.plugin.settings.toggles[name] = !value;
+                try {
+                    if (templateSelect.value) {
+                        const template = this.plugin.latex.findTemplate(templateSelect.value);
+                        if (template) {
+                            await this.plugin.latex.updateTemplateToggle(template, name, value);
+                            this.plugin.settings.toggles[name] = value;
                             await this.plugin.saveSettings();
                         }
                     }
+                } catch (error) {
+                    new Notice(`Erreur lors de la mise à jour du toggle ${name}: ${error.message}`);
+                    toggleComponent.setValue(!value);
+                    this.plugin.settings.toggles[name] = !value;
+                    await this.plugin.saveSettings();
                 }
             });
         };
@@ -240,13 +238,18 @@ export class BookBrewView extends ItemView {
         };
 
         // Imposition section
-        const impositionSection = container.createDiv();
-        impositionSection.createEl('h3', { text: this.plugin.translations.view.imposition });
-        const impositionSelect = impositionSection.createEl('select');
+        const impositionSection = container.createDiv({ cls: 'imposition-section' });
+        const impositionHeader = impositionSection.createDiv({ cls: 'section-header' });
+        impositionHeader.createEl('h3', { text: this.plugin.translations.view.imposition });
+        const impositionSelect = impositionHeader.createEl('select');
         impositionSelect.appendChild(new Option(this.plugin.translations.view.none, ''));
         
         // Paper thickness section (caché par défaut)
-        this.thicknessSection = container.createDiv({ cls: 'hidden' });
+        this.thicknessSection = impositionSection.createDiv({ cls: 'hidden thickness-section' });
+        const thicknessLabel = this.thicknessSection.createSpan({ 
+            text: this.plugin.translations.view.paperThickness, 
+            cls: 'thickness-label' 
+        });
         const thicknessInput = this.thicknessSection.createEl('input', {
             type: 'number',
             placeholder: this.plugin.translations.view.paperThickness,
@@ -270,7 +273,88 @@ export class BookBrewView extends ItemView {
             }
         });
 
-        // Export section
+        // Cover Generator section
+        const coverSection = container.createDiv({ cls: 'cover-section' });
+        const coverHeader = coverSection.createDiv({ cls: 'section-header' });
+        coverHeader.createEl('h3', { text: this.plugin.translations.view.coverGenerator });
+        const coverSelect = coverHeader.createEl('select');
+        coverSelect.appendChild(new Option(this.plugin.translations.view.none, ''));
+
+        // Dynamic Fields section for cover
+        const coverFieldsSection = coverSection.createDiv({ cls: 'cover-fields-section' });
+        coverFieldsSection.createEl('h4', { text: this.plugin.translations.view.dynamicFields + ' (Cover)' });
+        const coverFieldsList = coverFieldsSection.createEl('div', { cls: 'dynamic-fields' });
+
+        const coverThicknessContainer = coverSection.createDiv({ cls: 'cover-thickness-container' });
+        const coverThicknessLabel = coverThicknessContainer.createSpan({ 
+            text: this.plugin.translations.view.coverThickness, 
+            cls: 'thickness-label' 
+        });
+        const coverThicknessInput = coverThicknessContainer.createEl('input', {
+            type: 'number',
+            placeholder: this.plugin.translations.view.coverThickness,
+            value: this.plugin.settings.coverThickness.toString()
+        });
+        coverThicknessInput.addEventListener('change', async () => {
+            this.plugin.settings.coverThickness = parseFloat(coverThicknessInput.value);
+            await this.plugin.saveSettings();
+        });
+        
+        // Generate Cover button
+        const generateCoverButton = coverSection.createEl('button', {
+            text: this.plugin.translations.view.generateCover
+        });
+        generateCoverButton.addEventListener('click', async () => {
+            const exportPath = exportPathInput.value;
+            if (!exportPath) {
+                new Notice('No export path selected');
+                return;
+            }
+
+            const selectedCover = coverSelect.value;
+            if (!selectedCover) {
+                new Notice('No cover template selected');
+                return;
+            }
+
+            const cover = this.plugin.latex.covers.find(c => c.name === selectedCover);
+            if (!cover) {
+                new Notice('Cover template not found');
+                return;
+            }
+
+            const activeFile = this.app.workspace.getActiveFile();
+            if (!activeFile) {
+                new Notice('No active file');
+                return;
+            }
+
+            try {
+                this.showProgress();
+                
+                // Récupérer les champs dynamiques du YAML frontmatter
+                const dynamicFields = await this.plugin.latex.parseYAMLFields(activeFile);
+
+                // Préparer le chemin de sortie
+                const coverOutputPath = join(exportPath, `${activeFile.basename}_cover.pdf`);
+
+                // Générer la couverture
+                const result = await this.plugin.coverGenerator.generateCover(
+                    cover,
+                    dynamicFields,
+                    this.plugin.settings.coverThickness,
+                    coverOutputPath
+                );
+
+                this.hideProgress();
+                new Notice(`Cover generated: ${result}`);
+            } catch (error) {
+                this.hideProgress();
+                new Notice(`Cover generation failed: ${error.message}`);
+            }
+        });
+
+        // Export section (déplacée à la fin)
         const exportSection = container.createDiv({ cls: 'export-section' });
         const exportPathContainer = exportSection.createDiv({ cls: 'export-path-container' });
         const exportPathInput = exportPathContainer.createEl('input', {
@@ -281,9 +365,9 @@ export class BookBrewView extends ItemView {
         });
         
         const chooseFolderButton = exportPathContainer.createEl('button', {
-            text: '📁',
             cls: 'choose-folder-button'
         });
+        setIcon(chooseFolderButton, 'folder');
         chooseFolderButton.addEventListener('click', () => {
             try {
                 const { dialog } = require('@electron/remote');
@@ -302,7 +386,6 @@ export class BookBrewView extends ItemView {
             }
         });
 
-        // Export button
         const exportButton = exportSection.createEl('button', {
             text: this.plugin.translations.view.export,
             cls: 'export-button'
@@ -392,10 +475,12 @@ export class BookBrewView extends ItemView {
 
                 // Ajouter l'imposition si sélectionnée
                 const selectedImposition = impositionSelect.value;
+                
                 if (selectedImposition) {
                     const imposition = this.plugin.latex.impositions.find(
                         imp => imp.name === selectedImposition
                     );
+                    
                     if (imposition) {
                         exportOptions.imposition = imposition;
                         if (imposition.type === 'spread') {
@@ -411,17 +496,6 @@ export class BookBrewView extends ItemView {
                 new Notice(`Export failed: ${error.message}`);
             }
         });
-
-        // Cover Generator section
-        const coverSection = container.createDiv();
-        coverSection.createEl('h3', { text: this.plugin.translations.view.coverGenerator });
-        const coverSelect = coverSection.createEl('select');
-        coverSelect.appendChild(new Option(this.plugin.translations.view.none, ''));
-
-        // Dynamic Fields section for cover
-        const coverFieldsSection = container.createDiv();
-        coverFieldsSection.createEl('h3', { text: this.plugin.translations.view.dynamicFields + ' (Cover)' });
-        const coverFieldsList = coverFieldsSection.createEl('div', { cls: 'dynamic-fields' });
 
         // Fonction pour mettre à jour les champs dynamiques de la couverture
         const updateCoverDynamicFields = async () => {
@@ -441,76 +515,9 @@ export class BookBrewView extends ItemView {
                 const fieldsText = Array.from(fields).join(', ');
                 coverFieldsList.createEl('p', { text: fieldsText });
             } else {
-                coverFieldsList.createEl('p', { text: 'No dynamic fields detected', cls: 'no-fields' });
+                coverFieldsList.createEl('p', { text: this.plugin.translations.view.none, cls: 'no-fields' });
             }
         };
-
-        // Cover thickness
-        const coverThicknessInput = coverSection.createEl('input', {
-            type: 'number',
-            placeholder: this.plugin.translations.view.coverThickness,
-            value: this.plugin.settings.coverThickness.toString()
-        });
-        coverThicknessInput.addEventListener('change', async () => {
-            this.plugin.settings.coverThickness = parseFloat(coverThicknessInput.value);
-            await this.plugin.saveSettings();
-        });
-        
-        // Generate Cover button
-        const generateCoverButton = coverSection.createEl('button', {
-            text: this.plugin.translations.view.generateCover
-        });
-        generateCoverButton.addEventListener('click', async () => {
-            const exportPath = exportPathInput.value;
-            if (!exportPath) {
-                new Notice('No export path selected');
-                return;
-            }
-
-            const selectedCover = coverSelect.value;
-            if (!selectedCover) {
-                new Notice('No cover template selected');
-                return;
-            }
-
-            const cover = this.plugin.latex.covers.find(c => c.name === selectedCover);
-            if (!cover) {
-                new Notice('Cover template not found');
-                return;
-            }
-
-            const activeFile = this.app.workspace.getActiveFile();
-            if (!activeFile) {
-                new Notice('No active file');
-                return;
-            }
-
-            try {
-                // Récupérer les champs dynamiques du YAML frontmatter
-                const dynamicFields = await this.plugin.latex.parseYAMLFields(activeFile);
-
-                // Préparer les options d'export
-                const exportOptions = {
-                    file: activeFile,
-                    template: { name: '', path: '', content: '' }, // Template vide car non utilisé pour la couverture
-                    dynamicFields: {}, // Vide car non utilisé pour la couverture
-                    toggles: {}, // Vide car non utilisé pour la couverture
-                    cover: cover,
-                    coverFields: dynamicFields,
-                    coverThickness: this.plugin.settings.coverThickness,
-                    outputPath: join(exportPath, `${activeFile.basename}.pdf`)
-                };
-
-                // Générer la couverture
-                new Notice('Generating cover...');
-                const result = await this.plugin.exportCoordinator.export(exportOptions);
-                if (result.cover) {
-                    new Notice(`Cover generated: ${result.cover}`);
-                }
-            } catch (error) {
-                new Notice(`Cover generation failed: ${error.message}`);
-            }
-        });
 
         // Écouter les changements de couverture
         coverSelect.addEventListener('change', updateCoverDynamicFields);
@@ -528,6 +535,9 @@ export class BookBrewView extends ItemView {
         // Stocker les références pour la mise à jour
         this.impositionSelect = impositionSelect;
         this.coverSelect = coverSelect;
+
+        // Mettre à jour les impositions et couvertures initiales
+        this.updateImpositionsAndCovers();
     }
 
     private updateImpositionsAndCovers() {

@@ -4,6 +4,7 @@ import { BookBrewSettings, DEFAULT_SETTINGS } from './settings';
 import { Translations, loadTranslations } from './i18n';
 import { LatexService } from './services/latex/LatexService';
 import { ExportCoordinator } from './services/export/ExportCoordinator';
+import { CoverGenerator } from './services/export/CoverGenerator';
 import { join } from 'path';
 
 class BookBrewSettingTab extends PluginSettingTab {
@@ -102,6 +103,7 @@ export default class BookBrewPlugin extends Plugin {
 	translations: Translations;
 	latex: LatexService;
 	exportCoordinator: ExportCoordinator;
+	coverGenerator: CoverGenerator;
 
 	async onload() {
 		await this.loadSettings();
@@ -132,20 +134,22 @@ export default class BookBrewPlugin extends Plugin {
 			this.settings.pandocPath,
 			this.settings.pdftkPath
 		);
+		await this.exportCoordinator.init();
+
+		// Initialize Cover Generator
+		this.coverGenerator = new CoverGenerator(
+			pluginPath,
+			this.settings.latexPath
+		);
 
 		// Register View
 		this.registerView(
 			VIEW_TYPE_BOOKBREW,
-			(leaf) => {
-				const view = new BookBrewView(leaf, this);
-				// Override the getIcon method
-				view.getIcon = () => 'bookbrew';
-				return view;
-			}
+			(leaf) => new BookBrewView(leaf, this)
 		);
 
 		// Add ribbon icon
-		this.addRibbonIcon('bookbrew', this.translations.ribbonTooltip, () => {
+		this.addRibbonIcon('book-dashed', 'BookBrew', () => {
 			this.activateView();
 		});
 
@@ -173,6 +177,11 @@ export default class BookBrewPlugin extends Plugin {
 				}
 				return true;
 			}
+		});
+
+		// Activer automatiquement le panneau au démarrage
+		this.app.workspace.onLayoutReady(() => {
+			this.activateView();
 		});
 	}
 
