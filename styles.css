@@ -1,3 +1,4 @@
+/* Styles de base */
 .bookbrew-view {
     padding: 20px;
 }
@@ -13,6 +14,7 @@
     color: var(--icon-color);
 }
 
+/* Titres */
 .bookbrew-view h2 {
     margin-bottom: 20px;
     border-bottom: 1px solid var(--background-modifier-border);
@@ -25,6 +27,7 @@
     font-size: 1.1em;
 }
 
+/* Champs de formulaire */
 .bookbrew-view select,
 .bookbrew-view input[type="number"],
 .bookbrew-view input[type="text"] {
@@ -36,6 +39,31 @@
     padding: 8px;
 }
 
+.bookbrew-view select:focus,
+.bookbrew-view input[type="number"]:focus,
+.bookbrew-view input[type="text"]:focus {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px var(--background-modifier-border);
+}
+
+/* Boutons */
+.bookbrew-view button {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin: 10px 0;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.bookbrew-view button:hover {
+    background: var(--interactive-accent-hover);
+}
+
+/* Sections */
 .bookbrew-view .setting-item {
     display: flex;
     justify-content: space-between;
@@ -49,25 +77,12 @@
     align-items: center;
 }
 
-.bookbrew-view button {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    padding: 8px 16px;
+/* Champs dynamiques */
+.bookbrew-view .dynamic-fields,
+.bookbrew-view .latex-toggles {
+    background: var(--background-primary);
     border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    margin: 10px 0;
-    width: 100%;
-}
-
-.bookbrew-view button:hover {
-    background: var(--interactive-accent-hover);
-}
-
-.bookbrew-view .dynamic-fields {
-    background: var(--background-primary-alt);
-    border-radius: 4px;
-    padding: 10px;
+    padding: 12px;
     margin-bottom: 15px;
     border: 1px solid var(--background-modifier-border);
     box-shadow: 0 2px 4px var(--background-modifier-box-shadow);
@@ -85,10 +100,6 @@
     border-bottom: none;
 }
 
-.hidden {
-    display: none;
-}
-
 .dynamic-fields p {
     margin: 0;
     font-family: var(--font-monospace);
@@ -99,13 +110,7 @@
     font-style: italic;
 }
 
-.latex-toggles {
-    background: var(--background-primary-alt);
-    border-radius: 4px;
-    padding: 10px;
-    margin-bottom: 15px;
-}
-
+/* Toggles LaTeX */
 .latex-toggles .setting-item {
     display: flex;
     justify-content: space-between;
@@ -118,11 +123,14 @@
     border-bottom: none;
 }
 
+/* Section d'export */
 .export-section {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 16px 0;
+    margin: 40px 0 16px;
+    padding-top: 20px;
+    border-top: 2px solid var(--background-modifier-border);
 }
 
 .export-path-container {
@@ -137,15 +145,11 @@
     padding: 4px 8px;
 }
 
-.choose-folder-button {
-    padding: 4px 8px;
-    cursor: pointer;
-}
-
 .export-button {
     padding: 4px 12px;
 }
 
+/* Section de progression */
 .progress-section {
     background: var(--background-primary-alt);
     border-radius: 4px;
@@ -208,10 +212,6 @@
     padding: 2px 0;
 }
 
-.bookbrew-view {
-    padding: 20px;
-}
-
 /* Sections principales */
 .imposition-section,
 .cover-section {
@@ -223,6 +223,7 @@
     margin-bottom: 20px;
 }
 
+/* Sections d'épaisseur */
 .thickness-section,
 .cover-thickness-container {
     display: flex;
@@ -236,6 +237,12 @@
     color: var(--text-normal);
 }
 
+.cover-thickness-container input,
+.thickness-section input {
+    flex: 1;
+}
+
+/* Section des champs */
 .fields-section {
     margin: 20px 0;
 }
@@ -248,40 +255,9 @@
     letter-spacing: 0.5px;
 }
 
-.cover-thickness-container input,
-.thickness-section input {
-    flex: 1;
-}
-
-.export-section {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 2px solid var(--background-modifier-border);
-}
-
-/* Amélioration des styles existants */
-.bookbrew-view select:focus,
-.bookbrew-view input[type="number"]:focus,
-.bookbrew-view input[type="text"]:focus {
-    border-color: var(--interactive-accent);
-    box-shadow: 0 0 0 2px var(--background-modifier-border);
-}
-
-.bookbrew-view button {
-    transition: background-color 0.2s ease;
-}
-
-.bookbrew-view .dynamic-fields,
-.bookbrew-view .latex-toggles {
-    border: 1px solid var(--background-modifier-border);
-    box-shadow: 0 2px 4px var(--background-modifier-box-shadow);
-    padding: 12px;
-    border-radius: 4px;
-    background: var(--background-primary);
-} 
-
+/* Bouton de sélection de dossier */
 .choose-folder-button {
-    padding: 4px 8px;
+    padding: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -289,11 +265,7 @@
     --icon-size: var(--icon-size-m);
 }
 
-.choose-folder-button:hover {
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
-} 
-
+/* En-tête avec titre */
 .bookbrew-title {
     display: flex;
     align-items: center;
@@ -315,21 +287,7 @@
     --icon-size: 24px;
 }
 
-.choose-folder-button {
-    padding: 4px 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    --icon-size: var(--icon-size-m);
-}
-
-.choose-folder-button:hover {
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
-} 
-
-/* Style pour les sections avec titre et select alignés */
+/* En-têtes de section */
 .section-header {
     display: flex;
     align-items: center;
@@ -350,14 +308,15 @@
     flex: 1;
     margin: 0;
     padding: 4px 8px;
-    min-width: 0; /* Important pour éviter le débordement du flex */
+    min-width: 0;
 }
 
-/* Suppression des styles redondants */
-.bookbrew-view .section-header,
-.bookbrew-view .section-header h3,
-.bookbrew-view .section-header::after,
-.bookbrew-view .section-header select {
-    /* Ces styles sont maintenant hérités de .section-header */
-    all: revert;
-} 
+/* Utilitaires */
+.hidden {
+    display: none;
+}
+
+/* Conteneur principal */
+.workspace-leaf-content[data-type="bookbrew-view"] {
+    padding: 1rem;
+}

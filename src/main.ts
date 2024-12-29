@@ -1,10 +1,13 @@
 import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, MarkdownView, Notice } from 'obsidian';
-import { BookBrewView, VIEW_TYPE_BOOKBREW } from './view';
-import { BookBrewSettings, DEFAULT_SETTINGS } from './settings';
+import { BookBrewView } from './view';
+import { BookBrewSettings } from './settings';
 import { Translations, loadTranslations } from './i18n';
 import { LatexService } from './services/latex/LatexService';
 import { ExportCoordinator } from './services/export/ExportCoordinator';
 import { CoverGenerator } from './services/export/CoverGenerator';
+import { ExportOptions } from './types/interfaces';
+import { VIEW_TYPE_BOOKBREW, DEFAULT_SETTINGS } from './constants/settings';
+import { getExportPath } from './utils/paths';
 import { join } from 'path';
 
 class BookBrewSettingTab extends PluginSettingTab {
@@ -218,8 +221,32 @@ export default class BookBrewPlugin extends Plugin {
 
 	private async exportCurrentNote(view: MarkdownView) {
 		try {
-			// TODO: Implement export logic using LaTeX service
-			new Notice('Export not implemented yet');
+			const file = view.file;
+			if (!file) {
+				new Notice('No file is currently open');
+				return;
+			}
+
+			// Utiliser le premier template disponible comme template par défaut
+			const templates = this.latex.templates;
+			if (templates.length === 0) {
+				new Notice('No templates available');
+				return;
+			}
+			const defaultTemplate = templates[0];
+
+			// Créer les options d'export avec des paramètres par défaut
+			const exportOptions: ExportOptions = {
+				file: file,
+				template: defaultTemplate,
+				dynamicFields: {},
+				toggles: this.settings.toggles,
+				outputPath: join(this.settings.lastExportPath || '.', `${file.basename}.pdf`)
+			};
+
+			// Lancer l'export
+			await this.exportCoordinator.export(exportOptions);
+			new Notice('Export completed successfully');
 		} catch (error) {
 			new Notice(`Export failed: ${error.message}`);
 		}

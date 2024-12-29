@@ -1,6 +1,5 @@
 import { Vault, TFile } from 'obsidian';
-import { ExportOptions } from './ExportOptions';
-import { ExportEvent, ExportEventCallback } from './ExportEvents';
+import { ExportOptions, ExportEvent, ExportEventCallback, ExportResult } from '../../types/interfaces';
 import { spawn } from 'child_process';
 import { join } from 'path';
 import * as fs from 'fs/promises';
@@ -9,11 +8,7 @@ import { execAsync } from '../../utils/execAsync';
 import { LatexService } from '../latex/LatexService';
 import { SpreadImposer } from './SpreadImposer';
 import { CoverGenerator } from './CoverGenerator';
-
-interface ExportResult {
-    pdf: string;
-    cover?: string;
-}
+import { getExportPath, getTempPath, getPluginResourcePath } from '../../utils/paths';
 
 export class ExportCoordinator {
     private currentProcess: any = null;
@@ -137,7 +132,12 @@ export class ExportCoordinator {
 
                 result.pdf = await this.applyImposition(result.pdf, options);
             } else {
-                
+                // No imposition needed, continue with the original PDF
+                this.emitEvent({
+                    type: 'progress',
+                    message: 'Skipping imposition...',
+                    progress: 80
+                });
             }
 
             this.emitEvent({

@@ -1,11 +1,11 @@
-import { ItemView, WorkspaceLeaf, ToggleComponent, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf, ToggleComponent, setIcon, Notice } from 'obsidian';
 import BookBrewPlugin from './main';
 import { BookBrewSettings } from './settings';
+import { ExportOptions } from './types/interfaces';
+import { ExportProgressUI } from './ui/ExportProgressUI';
+import { VIEW_TYPE_BOOKBREW } from './constants/settings';
+import { getExportPath } from './utils/paths';
 import { join } from 'path';
-import { Notice } from 'obsidian';
-import { ExportOptions } from './services/export/ExportOptions';
-
-export const VIEW_TYPE_BOOKBREW = 'bookbrew-view';
 
 export class BookBrewView extends ItemView {
     private plugin: BookBrewPlugin;
@@ -18,6 +18,7 @@ export class BookBrewView extends ItemView {
     private cancelButton: HTMLButtonElement;
     private logContainer: HTMLDivElement;
     private isExporting: boolean = false;
+    private progressUI: ExportProgressUI;
 
     constructor(leaf: WorkspaceLeaf, plugin: BookBrewPlugin) {
         super(leaf);
@@ -61,52 +62,38 @@ export class BookBrewView extends ItemView {
     }
 
     private updateProgress(progress: number, message: string) {
-        if (this.progressBar && this.progressText) {
-            this.progressBar.value = progress;
-            this.progressText.textContent = message;
-        }
+        this.progressUI.updateProgress(progress, message);
     }
 
     private addLogMessage(message: string) {
-        const logLine = this.logContainer.createDiv({ cls: 'log-line' });
-        logLine.textContent = message;
-        this.logContainer.scrollTop = this.logContainer.scrollHeight;
+        this.progressUI.addLogMessage(message);
     }
 
     private showProgress() {
-        const progressSection = this.containerEl.querySelector('.progress-section');
-        if (progressSection) {
-            progressSection.removeClass('hidden');
-        }
-        this.isExporting = true;
+        this.progressUI.show();
     }
 
     private hideProgress() {
-        const progressSection = this.containerEl.querySelector('.progress-section');
-        if (progressSection) {
-            progressSection.addClass('hidden');
-        }
-        this.isExporting = false;
-        if (this.logContainer) {
-            this.logContainer.empty();
-        }
+        this.progressUI.hide();
     }
 
     async onOpen() {
-        const container = this.containerEl.children[1] as HTMLElement;
-        container.empty();
+        const { containerEl } = this;
+        containerEl.empty();
+        
+        this.progressUI = new ExportProgressUI(containerEl);
         
         // Titre avec icône
-        const titleContainer = container.createDiv({ cls: 'bookbrew-title' });
+        const titleContainer = containerEl.createDiv({ cls: 'bookbrew-title' });
         const titleIcon = titleContainer.createSpan({ cls: 'bookbrew-title-icon' });
         setIcon(titleIcon, 'book-dashed');
         titleContainer.createEl('h2', { text: 'BookBrew' });
 
         // Créer la section de progression
-        this.createProgressSection(container);
+        this.createProgressSection(containerEl);
 
         // Template section
-        const templateSection = container.createDiv();
+        const templateSection = containerEl.createDiv();
         const templateHeader = templateSection.createDiv({ cls: 'section-header' });
         templateHeader.createEl('h3', { text: this.plugin.translations.view.template });
         const templateSelect = templateHeader.createEl('select');
@@ -134,7 +121,7 @@ export class BookBrewView extends ItemView {
         });
 
         // Dynamic Fields section for template
-        const fieldsSection = container.createDiv({ cls: 'fields-section' });
+        const fieldsSection = containerEl.createDiv({ cls: 'fields-section' });
         fieldsSection.createEl('h4', { text: this.plugin.translations.view.dynamicFields + ' (Template)' });
         const fieldsList = fieldsSection.createEl('div', { cls: 'dynamic-fields' });
 
@@ -172,7 +159,7 @@ export class BookBrewView extends ItemView {
         };
 
         // LaTeX Toggles section
-        const togglesSection = container.createDiv();
+        const togglesSection = containerEl.createDiv();
         togglesSection.createEl('h3', { text: 'LaTeX Options' });
         const togglesList = togglesSection.createEl('div', { cls: 'latex-toggles' });
 
@@ -238,7 +225,7 @@ export class BookBrewView extends ItemView {
         };
 
         // Imposition section
-        const impositionSection = container.createDiv({ cls: 'imposition-section' });
+        const impositionSection = containerEl.createDiv({ cls: 'imposition-section' });
         const impositionHeader = impositionSection.createDiv({ cls: 'section-header' });
         impositionHeader.createEl('h3', { text: this.plugin.translations.view.imposition });
         const impositionSelect = impositionHeader.createEl('select');
@@ -274,7 +261,7 @@ export class BookBrewView extends ItemView {
         });
 
         // Cover Generator section
-        const coverSection = container.createDiv({ cls: 'cover-section' });
+        const coverSection = containerEl.createDiv({ cls: 'cover-section' });
         const coverHeader = coverSection.createDiv({ cls: 'section-header' });
         coverHeader.createEl('h3', { text: this.plugin.translations.view.coverGenerator });
         const coverSelect = coverHeader.createEl('select');
@@ -355,7 +342,7 @@ export class BookBrewView extends ItemView {
         });
 
         // Export section (déplacée à la fin)
-        const exportSection = container.createDiv({ cls: 'export-section' });
+        const exportSection = containerEl.createDiv({ cls: 'export-section' });
         const exportPathContainer = exportSection.createDiv({ cls: 'export-path-container' });
         const exportPathInput = exportPathContainer.createEl('input', {
             type: 'text',
