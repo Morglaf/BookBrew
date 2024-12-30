@@ -531,18 +531,40 @@ export class BookBrewView extends ItemView {
         // Mettre à jour les impositions disponibles
         const impositions = this.plugin.latex.getImpositionsForFormat(this.selectedFormat);
         
-        this.impositionSelect.innerHTML = `<option value="">${this.plugin.translations.view.none}</option>`;
+        // Vider le select des impositions
+        this.impositionSelect.empty();
+        
+        // Ajouter l'option par défaut
+        const defaultImpositionOption = document.createElement('option');
+        defaultImpositionOption.value = '';
+        defaultImpositionOption.textContent = this.plugin.translations.view.none;
+        this.impositionSelect.appendChild(defaultImpositionOption);
+        
+        // Ajouter les autres options
         impositions.forEach(imposition => {
-            const option = new Option(imposition.name, imposition.name);
+            const option = document.createElement('option');
+            option.value = imposition.name;
+            option.textContent = imposition.name;
             this.impositionSelect.appendChild(option);
         });
 
         // Mettre à jour les couvertures disponibles
         const covers = this.plugin.latex.getCoversForFormat(this.selectedFormat);
         
-        this.coverSelect.innerHTML = `<option value="">${this.plugin.translations.view.none}</option>`;
+        // Vider le select des couvertures
+        this.coverSelect.empty();
+        
+        // Ajouter l'option par défaut
+        const defaultCoverOption = document.createElement('option');
+        defaultCoverOption.value = '';
+        defaultCoverOption.textContent = this.plugin.translations.view.none;
+        this.coverSelect.appendChild(defaultCoverOption);
+        
+        // Ajouter les autres options
         covers.forEach(cover => {
-            const option = new Option(cover.name, cover.name);
+            const option = document.createElement('option');
+            option.value = cover.name;
+            option.textContent = cover.name;
             this.coverSelect.appendChild(option);
         });
 

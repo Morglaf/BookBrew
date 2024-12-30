@@ -1,12 +1,15 @@
-import { PDFDocument, PDFPage, PDFEmbeddedPage } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
 import { promises as fs } from 'fs';
+import { join, dirname } from 'path';
+import { execAsync } from '../../utils/execAsync';
 
 export class SpreadImposer {
     private baseCompensation: number = 0;
 
     constructor(
         private paperThickness: number = 0.1,
-        private impositionTemplatePath?: string
+        private impositionTemplatePath?: string,
+        private latexPath: string = 'xelatex'
     ) {
         if (impositionTemplatePath) {
             this.extractBaseCompensation(impositionTemplatePath);
@@ -25,195 +28,175 @@ export class SpreadImposer {
         }
     }
 
-    private async loadPDF(pdfPath: string): Promise<PDFDocument> {
-        const pdfBytes = await fs.readFile(pdfPath);
-        return await PDFDocument.load(pdfBytes, { 
-            ignoreEncryption: true,
-            updateMetadata: false
-        });
-    }
-
-    private async savePDF(doc: PDFDocument, outputPath: string): Promise<void> {
-        const pdfBytes = await doc.save();
-        await fs.writeFile(outputPath, pdfBytes);
-    }
-
-    private async addBlankPages(doc: PDFDocument, pagesPerSignature: number): Promise<void> {
-        const currentPageCount = doc.getPageCount();
-        const remainder = currentPageCount % pagesPerSignature;
-        
-        if (remainder > 0) {
-            const blankPagesToAdd = pagesPerSignature - remainder;
-            for (let i = 0; i < blankPagesToAdd; i++) {
-                const blankPage = doc.addPage();
-                const firstPage = doc.getPage(0);
-                blankPage.setSize(firstPage.getWidth(), firstPage.getHeight());
-            }
-        }
-    }
-
     private calculateSpreadCompensation(
-        signatureIndex: number,
-        totalSignatures: number
+        segmentIndex: number,
+        totalSegments: number
     ): number {
-        const cahiersExterieurs = signatureIndex;
+        // Le dernier segment (en bas) n'a que la compensation de base
+        // Le premier segment (en haut) a la compensation maximale
+        const segmentsAbove = totalSegments - segmentIndex - 1;
         const compensationPerSheet = 2 * this.paperThickness;
-        const additionalCompensation = cahiersExterieurs * compensationPerSheet;
+        const additionalCompensation = segmentsAbove * 2 * compensationPerSheet;
         const totalCompensation = this.baseCompensation + additionalCompensation;
         
         return totalCompensation;
     }
 
-    private async embedPages(doc: PDFDocument, pages: PDFPage[]): Promise<PDFEmbeddedPage[]> {
-        return await doc.embedPages(pages);
-    }
+    private async reorderPagesForSpread(doc: PDFDocument, totalPages: number): Promise<PDFDocument> {
+        const newDoc = await PDFDocument.create();
+        const pageIndices = [];
 
-    private async imposeSignature(
-        inputDoc: PDFDocument,
-        startPage: number,
-        pagesPerSignature: number
-    ): Promise<PDFDocument> {
-        const outputDoc = await PDFDocument.create();
-        const pages = inputDoc.getPages();
-        const pageWidth = pages[0].getWidth();
-        const pageHeight = pages[0].getHeight();
-
-        const pagesToEmbed = pages.slice(startPage, startPage + pagesPerSignature);
-        const embeddedPages = await this.embedPages(outputDoc, pagesToEmbed);
-
-        const sheetsNeeded = pagesPerSignature / 4;
-        
-        for (let sheet = 0; sheet < sheetsNeeded; sheet++) {
-            const rectoPage = outputDoc.addPage([pageWidth * 2, pageHeight]);
-            
-            const rectoIndices = [
-                pagesPerSignature - 1 - sheet,
-                sheet,
-            ];
-
-            for (let i = 0; i < 2; i++) {
-                const pageIndex = rectoIndices[i];
-                if (pageIndex < embeddedPages.length) {
-                    await rectoPage.drawPage(embeddedPages[pageIndex], {
-                        x: i * pageWidth,
-                        y: 0,
-                    });
-                }
-            }
-
-            const versoPage = outputDoc.addPage([pageWidth * 2, pageHeight]);
-            
-            const versoIndices = [
-                sheet + 1,
-                pagesPerSignature - 2 - sheet,
-            ];
-
-            for (let i = 0; i < 2; i++) {
-                const pageIndex = versoIndices[i];
-                if (pageIndex < embeddedPages.length) {
-                    await versoPage.drawPage(embeddedPages[pageIndex], {
-                        x: i * pageWidth,
-                        y: 0,
-                    });
-                }
-            }
+        // Créer l'ordre des pages pour le spread (1,n,2,n-1,3,n-2,...)
+        for (let i = 0; i < totalPages / 2; i++) {
+            pageIndices.push(i); // Page du début
+            pageIndices.push(totalPages - 1 - i); // Page correspondante de la fin
         }
 
-        return outputDoc;
+        // Copier les pages dans le nouvel ordre
+        for (const idx of pageIndices) {
+            const [page] = await newDoc.copyPages(doc, [idx]);
+            newDoc.addPage(page);
+        }
+
+        return newDoc;
     }
 
-    private async imposeSpread(
-        inputDoc: PDFDocument,
-        startPage: number,
-        pagesPerSpread: number,
+    private async createImpositionFile(
+        templatePath: string,
+        outputPath: string,
         signatureIndex: number,
         totalSignatures: number
-    ): Promise<PDFDocument> {
-        const outputDoc = await PDFDocument.create();
-        const pages = inputDoc.getPages();
-        const pageWidth = pages[0].getWidth();
-        const pageHeight = pages[0].getHeight();
-
-        const reorderedPages: PDFPage[] = [];
-        const pagesForSpread = pages.slice(startPage, startPage + pagesPerSpread);
+    ): Promise<void> {
+        const templateContent = await fs.readFile(templatePath, 'utf-8');
+        const totalCompensation = this.calculateSpreadCompensation(signatureIndex, totalSignatures);
         
-        const totalPages = pagesForSpread.length;
-        const sheetsNeeded = totalPages / 2;
+        const updatedContent = templateContent.replace(
+            /\\newcommand{\\compensation}{.*?mm}/,
+            `\\newcommand{\\compensation}{${totalCompensation.toFixed(2)}mm}`
+        );
+        
+        await fs.writeFile(outputPath, updatedContent);
+    }
 
-        for (let sheet = 0; sheet < sheetsNeeded; sheet++) {
-            const rectoLeft = startPage + (sheet * 2);
-            const rectoRight = startPage + totalPages - (sheet * 2) - 1;
-            
-            if (rectoLeft < pages.length) reorderedPages.push(pages[rectoLeft]);
-            if (rectoRight < pages.length) reorderedPages.push(pages[rectoRight]);
+    private async compileLatex(texFile: string, workingDir: string): Promise<void> {
+        const xelatex = this.latexPath ? join(this.latexPath, 'xelatex') : 'xelatex';
+        const command = `"${xelatex}" -interaction=nonstopmode "${texFile}"`;
+        try {
+            await execAsync(command, { cwd: workingDir });
+        } catch (error) {
+            throw new Error(`LaTeX compilation failed: ${error.message}\nCommand: ${command}`);
         }
-
-        const embeddedPages = await this.embedPages(outputDoc, reorderedPages);
-
-        const compensation = this.calculateSpreadCompensation(signatureIndex, totalSignatures);
-
-        for (let i = 0; i < sheetsNeeded; i++) {
-            const outputPage = outputDoc.addPage([pageWidth * 2, pageHeight]);
-            
-            const leftIndex = i * 2;
-            const rightIndex = i * 2 + 1;
-
-            if (leftIndex < embeddedPages.length) {
-                await outputPage.drawPage(embeddedPages[leftIndex], {
-                    x: compensation,
-                    y: 0,
-                });
-            }
-            if (rightIndex < embeddedPages.length) {
-                await outputPage.drawPage(embeddedPages[rightIndex], {
-                    x: pageWidth + compensation,
-                    y: 0,
-                });
-            }
-        }
-
-        return outputDoc;
     }
 
     async impose(
         inputPath: string,
         outputPath: string,
         pagesPerUnit: number,
-        type: 'signature' | 'spread',
-        impositionTemplatePath?: string
+        impositionTemplatePath: string
     ): Promise<void> {
-        if (impositionTemplatePath) {
-            await this.extractBaseCompensation(impositionTemplatePath);
+        if (!impositionTemplatePath) {
+            throw new Error('Imposition template path is required for spread imposition');
         }
 
-        const inputDoc = await this.loadPDF(inputPath);
-        const initialPageCount = inputDoc.getPageCount();
-
-        await this.addBlankPages(inputDoc, pagesPerUnit);
+        // Charger le PDF pour obtenir le nombre de pages
+        const pdfBytes = await fs.readFile(inputPath);
+        const inputDoc = await PDFDocument.load(pdfBytes);
         const totalPages = inputDoc.getPageCount();
-        const numberOfUnits = totalPages / pagesPerUnit;
 
-        const imposedDocs: PDFDocument[] = [];
+        // Calculer le nombre d'unités nécessaires
+        const numberOfUnits = Math.ceil(totalPages / pagesPerUnit);
+        const neededPages = numberOfUnits * pagesPerUnit;
 
-        for (let i = 0; i < numberOfUnits; i++) {
-            const startPage = i * pagesPerUnit;
-            const imposedDoc = type === 'signature'
-                ? await this.imposeSignature(inputDoc, startPage, pagesPerUnit)
-                : await this.imposeSpread(inputDoc, startPage, pagesPerUnit, i, numberOfUnits);
-            
-            imposedDocs.push(imposedDoc);
+        // Créer un dossier temporaire pour l'imposition
+        const tempDir = join(dirname(inputPath), `imposition_${Date.now()}`);
+        await fs.mkdir(tempDir, { recursive: true });
+
+        // Ajouter des pages blanches si nécessaire
+        let workingDoc = inputDoc;
+        if (totalPages < neededPages) {
+            const paddedDoc = await PDFDocument.create();
+            const pages = await paddedDoc.copyPages(inputDoc, inputDoc.getPageIndices());
+            pages.forEach(page => paddedDoc.addPage(page));
+
+            // Ajouter des pages blanches
+            for (let i = totalPages; i < neededPages; i++) {
+                paddedDoc.addPage();
+            }
+            workingDoc = paddedDoc;
         }
 
-        const finalDoc = await PDFDocument.create();
-        for (const doc of imposedDocs) {
-            const pages = doc.getPages();
-            const embeddedPages = await this.embedPages(finalDoc, pages);
-            for (const page of embeddedPages) {
-                const newPage = finalDoc.addPage([page.width, page.height]);
-                await newPage.drawPage(page);
+        // Réorganiser toutes les pages selon l'ordre des spreads
+        const reorderedDoc = await this.reorderPagesForSpread(workingDoc, neededPages);
+        const reorderedPdf = join(tempDir, 'reordered.pdf');
+        await fs.writeFile(reorderedPdf, await reorderedDoc.save());
+
+        const imposedPdfs: string[] = [];
+
+        // Pour chaque unité
+        for (let i = 0; i < numberOfUnits; i++) {
+            const chunkDir = join(tempDir, `chunk_${i + 1}`);
+            await fs.mkdir(chunkDir);
+
+            // Extraire les pages pour cette unité
+            const start = i * pagesPerUnit;
+            const end = start + pagesPerUnit;
+            const doc = await PDFDocument.create();
+            const sourceDoc = await PDFDocument.load(await fs.readFile(reorderedPdf));
+            const pages = await doc.copyPages(sourceDoc, Array.from({ length: pagesPerUnit }, (_, j) => start + j));
+            pages.forEach(page => doc.addPage(page));
+
+            // Sauvegarder le PDF de l'unité
+            const chunkPdf = join(chunkDir, 'export.pdf');
+            await fs.writeFile(chunkPdf, await doc.save());
+
+            // Créer le fichier d'imposition avec compensation
+            const impositionFile = join(chunkDir, 'imposition.tex');
+            await this.createImpositionFile(
+                impositionTemplatePath,
+                impositionFile,
+                i,
+                numberOfUnits
+            );
+
+            // Compiler avec XeLaTeX
+            await this.compileLatex(impositionFile, chunkDir);
+
+            // Ajouter le PDF résultant à la liste
+            const resultPdf = join(chunkDir, 'imposition.pdf');
+            if (await this.fileExists(resultPdf)) {
+                imposedPdfs.push(resultPdf);
             }
         }
 
-        await this.savePDF(finalDoc, outputPath);
+        // Assembler tous les PDFs
+        if (imposedPdfs.length > 0) {
+            const finalDoc = await PDFDocument.create();
+            
+            for (const pdfPath of imposedPdfs) {
+                const pdfBytes = await fs.readFile(pdfPath);
+                const pdf = await PDFDocument.load(pdfBytes);
+                const pages = await finalDoc.copyPages(pdf, pdf.getPageIndices());
+                pages.forEach(page => finalDoc.addPage(page));
+            }
+
+            const finalPdfBytes = await finalDoc.save();
+            await fs.writeFile(outputPath, finalPdfBytes);
+        }
+
+        // Nettoyer
+        try {
+            await fs.rm(tempDir, { recursive: true, force: true });
+        } catch (error) {
+            console.error('Error cleaning up temporary files:', error);
+        }
+    }
+
+    private async fileExists(path: string): Promise<boolean> {
+        try {
+            await fs.access(path);
+            return true;
+        } catch {
+            return false;
+        }
     }
 } 

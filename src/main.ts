@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, MarkdownView, Notice } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, MarkdownView, Notice, FileSystemAdapter } from 'obsidian';
 import { BookBrewView } from './view';
 import { BookBrewSettings } from './settings';
 import { Translations, loadTranslations } from './i18n';
@@ -116,7 +116,7 @@ export default class BookBrewPlugin extends Plugin {
 		// Initialize LaTeX service
 		const pluginPath = join(
 			(this.app.vault.adapter as any).basePath,
-			'.obsidian',
+			this.app.vault.configDir,
 			'plugins',
 			'bookbrew'
 		);
@@ -253,6 +253,6 @@ export default class BookBrewPlugin extends Plugin {
 	}
 
 	onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_BOOKBREW);
+		// Cleanup will be handled by Obsidian
 	}
 }
