@@ -1,5 +1,4 @@
 export interface BookBrewSettings {
-    language: string;
     latexPath: string;
     pandocPath: string;
     pdftkPath: string;
@@ -20,7 +19,6 @@ export interface BookBrewSettings {
 }
 
 export const DEFAULT_SETTINGS: BookBrewSettings = {
-    language: 'auto',
     latexPath: '',
     pandocPath: '',
     pdftkPath: '',

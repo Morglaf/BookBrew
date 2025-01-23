@@ -16,7 +16,7 @@ export class ExportProgressUI {
         // Créer la barre de progression
         const progressContainer = this.progressSection.createDiv({ cls: 'progress-container' });
         this.progressBar = progressContainer.createEl('progress', {
-            cls: 'progress-bar',
+            cls: 'bookbrew-progress-bar',
             attr: { max: '100', value: '0' }
         });
         this.progressText = progressContainer.createDiv({ cls: 'progress-text' });

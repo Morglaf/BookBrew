@@ -193,10 +193,7 @@ export class BookBrewView extends ItemView {
                         }
                     }
                 } catch (error) {
-                    new Notice(`Erreur lors de la mise à jour du toggle ${name}: ${error.message}`);
-                    toggleComponent.setValue(!value);
-                    this.plugin.settings.toggles[name] = !value;
-                    await this.plugin.saveSettings();
+                    new Notice(this.plugin.translations.view.notices.toggleUpdateError.replace('{0}', name).replace('{1}', error.message));
                 }
             });
         };
@@ -294,25 +291,25 @@ export class BookBrewView extends ItemView {
         generateCoverButton.addEventListener('click', async () => {
             const exportPath = exportPathInput.value;
             if (!exportPath) {
-                new Notice('No export path selected');
+                new Notice(this.plugin.translations.view.notices.noExportPath);
                 return;
             }
 
             const selectedCover = coverSelect.value;
             if (!selectedCover) {
-                new Notice('No cover template selected');
+                new Notice(this.plugin.translations.view.notices.noCoverTemplate);
                 return;
             }
 
             const cover = this.plugin.latex.covers.find(c => c.name === selectedCover);
             if (!cover) {
-                new Notice('Cover template not found');
+                new Notice(this.plugin.translations.view.notices.coverTemplateNotFound);
                 return;
             }
 
             const activeFile = this.app.workspace.getActiveFile();
             if (!activeFile) {
-                new Notice('No active file');
+                new Notice(this.plugin.translations.view.notices.noActiveFile);
                 return;
             }
 
@@ -334,10 +331,10 @@ export class BookBrewView extends ItemView {
                 );
 
                 this.hideProgress();
-                new Notice(`Cover generated: ${result}`);
+                new Notice(this.plugin.translations.view.notices.coverGenerated.replace('{0}', result));
             } catch (error) {
                 this.hideProgress();
-                new Notice(`Cover generation failed: ${error.message}`);
+                new Notice(this.plugin.translations.view.notices.coverGenerationFailed.replace('{0}', error.message));
             }
         });
 
@@ -380,25 +377,25 @@ export class BookBrewView extends ItemView {
         exportButton.addEventListener('click', async () => {
             const exportPath = exportPathInput.value;
             if (!exportPath) {
-                new Notice('No export path selected');
+                new Notice(this.plugin.translations.view.notices.noExportPath);
                 return;
             }
 
             const selectedTemplate = templateSelect.value;
             if (!selectedTemplate) {
-                new Notice('No template selected');
+                new Notice(this.plugin.translations.view.notices.noTemplateSelected);
                 return;
             }
 
             const template = this.plugin.latex.findTemplate(selectedTemplate);
             if (!template) {
-                new Notice('Template not found');
+                new Notice(this.plugin.translations.view.notices.templateNotFound);
                 return;
             }
 
             const activeFile = this.app.workspace.getActiveFile();
             if (!activeFile) {
-                new Notice('No active file');
+                new Notice(this.plugin.translations.view.notices.noActiveFile);
                 return;
             }
 
@@ -418,38 +415,22 @@ export class BookBrewView extends ItemView {
                             break;
                         case 'error':
                             this.hideProgress();
-                            new Notice(`Export failed: ${event.message}`);
+                            new Notice(this.plugin.translations.view.notices.exportFailed.replace('{0}', event.message));
                             break;
                         case 'complete':
                             this.hideProgress();
-                            new Notice('Export completed successfully');
+                            new Notice(this.plugin.translations.view.notices.exportCompleted);
                             break;
                         case 'cancelled':
                             this.hideProgress();
-                            new Notice('Export cancelled');
+                            new Notice(this.plugin.translations.view.notices.exportCancelled);
                             break;
                     }
                 });
 
-                // Récupérer les champs dynamiques du YAML frontmatter
-                const fileContent = await this.app.vault.read(activeFile);
-                const yamlRegex = /^---\n([\s\S]*?)\n---/;
-                const match = fileContent.match(yamlRegex);
-                const dynamicFields: Record<string, any> = {};
-                
-                if (match) {
-                    const yamlContent = match[1];
-                    const lines = yamlContent.split('\n');
-                    for (const line of lines) {
-                        const [key, ...valueParts] = line.split(':');
-                        if (key && valueParts.length > 0) {
-                            const value = valueParts.join(':').trim();
-                            if (value) {
-                                dynamicFields[key.trim()] = value;
-                            }
-                        }
-                    }
-                }
+                // Récupérer les champs dynamiques du frontmatter via MetadataCache
+                const metadata = this.app.metadataCache.getFileCache(activeFile);
+                const dynamicFields: Record<string, any> = metadata?.frontmatter || {};
 
                 // Préparer les options d'export
                 const exportOptions = {
@@ -480,7 +461,7 @@ export class BookBrewView extends ItemView {
                 await this.plugin.exportCoordinator.export(exportOptions);
             } catch (error) {
                 this.hideProgress();
-                new Notice(`Export failed: ${error.message}`);
+                new Notice(this.plugin.translations.view.notices.exportFailed.replace('{0}', error.message));
             }
         });
 

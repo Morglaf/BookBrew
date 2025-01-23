@@ -52,40 +52,55 @@ export interface Translations {
             tableOfContents: string;
             tableOfContentsEnd: string;
         };
+        notices: {
+            toggleUpdateError: string;
+            noExportPath: string;
+            noCoverTemplate: string;
+            coverTemplateNotFound: string;
+            noActiveFile: string;
+            coverGenerated: string;
+            coverGenerationFailed: string;
+            noTemplateSelected: string;
+            templateNotFound: string;
+            exportFailed: string;
+            exportCompleted: string;
+            exportCancelled: string;
+            noTemplatesAvailable: string;
+        };
     };
 }
 
 const en: Translations = {
     ribbonTooltip: "Open BookBrew",
     commands: {
-        openView: "Open BookBrew Panel",
+        openView: "Open BookBrew panel",
         exportPdf: "Export current note to PDF"
     },
     settings: {
         language: "Language",
         latexPath: "XeLaTeX installation path (leave empty to use system PATH)",
-        latexSection: "XeLaTeX configuration",
+        latexSection: "XeLaTeX",
         pandocPath: "Pandoc installation path (leave empty to use system PATH)",
-        pandocSection: "Pandoc configuration",
+        pandocSection: "Pandoc",
         pdftkPath: "PDFtk installation path (leave empty to use system PATH)",
-        pdftkSection: "PDFtk configuration",
-        generalSection: "General options",
+        pdftkSection: "PDFtk",
+        generalSection: "General",
         keepTempFiles: "Keep temporary files"
     },
     view: {
-        title: "LaTeX Template",
+        title: "LaTeX template",
         template: "Template",
-        dynamicFields: "Detected Dynamic Fields",
+        dynamicFields: "Detected dynamic fields",
         options: "Options",
         imposition: "Imposition",
         compensation: "Enable compensation for horse imposition",
-        paperThickness: "Paper Thickness (mm)",
-        exportPath: "Export Path",
-        keepTemp: "Keep Temporary Directory",
+        paperThickness: "Paper thickness (mm)",
+        exportPath: "Export path",
+        keepTemp: "Keep temporary directory",
         export: "Export",
-        coverGenerator: "Cover Generator",
-        coverThickness: "Spine Thickness (mm)",
-        generateCover: "Generate Cover",
+        coverGenerator: "Cover generator",
+        coverThickness: "Spine thickness (mm)",
+        generateCover: "Generate cover",
         latexNotFound: "LaTeX not found. Please check your LaTeX installation or specify the path in settings.",
         pandocNotFound: "Pandoc not found. Please check your Pandoc installation or specify the path in settings.",
         none: "None",
@@ -101,12 +116,27 @@ const en: Translations = {
             cancelled: "Export cancelled"
         },
         toggles: {
-            coverPage: "Cover Page",
-            halfTitlePage: "Half Title Page",
-            titlePage: "Title Page",
-            tableOfContents: "Table of Contents at Start",
-            tableOfContentsEnd: "Table of Contents at End"
+            coverPage: "Cover page",
+            halfTitlePage: "Half title page",
+            titlePage: "Title page",
+            tableOfContents: "Table of contents at start",
+            tableOfContentsEnd: "Table of contents at end"
         },
+        notices: {
+            toggleUpdateError: "Failed to update toggle {0}: {1}",
+            noExportPath: "No export path selected",
+            noCoverTemplate: "No cover template selected",
+            coverTemplateNotFound: "Cover template not found",
+            noActiveFile: "No active file",
+            coverGenerated: "Cover generated: {0}",
+            coverGenerationFailed: "Cover generation failed: {0}",
+            noTemplateSelected: "No template selected",
+            templateNotFound: "Template not found",
+            exportFailed: "Export failed: {0}",
+            exportCompleted: "Export completed successfully",
+            exportCancelled: "Export cancelled",
+            noTemplatesAvailable: "No templates available"
+        }
     }
 };
 
@@ -119,12 +149,12 @@ const fr: Translations = {
     settings: {
         language: "Langue",
         latexPath: "Chemin d'installation XeLaTeX (laisser vide pour utiliser le PATH système)",
-        latexSection: "Configuration XeLaTeX",
+        latexSection: "XeLaTeX",
         pandocPath: "Chemin d'installation Pandoc (laisser vide pour utiliser le PATH système)",
-        pandocSection: "Configuration Pandoc",
+        pandocSection: "Pandoc",
         pdftkPath: "Chemin d'installation PDFtk (laisser vide pour utiliser le PATH système)",
-        pdftkSection: "Configuration PDFtk",
-        generalSection: "Options générales",
+        pdftkSection: "PDFtk",
+        generalSection: "Général",
         keepTempFiles: "Conserver les fichiers temporaires"
     },
     view: {
@@ -156,12 +186,27 @@ const fr: Translations = {
             cancelled: "Export annulé"
         },
         toggles: {
-            coverPage: "Page de Garde",
-            halfTitlePage: "Page de Demi-titre",
-            titlePage: "Page de Titre",
-            tableOfContents: "Table des Matières au Début",
-            tableOfContentsEnd: "Table des Matières à la Fin"
+            coverPage: "Page de garde",
+            halfTitlePage: "Page de demi-titre",
+            titlePage: "Page de titre",
+            tableOfContents: "Table des matières au début",
+            tableOfContentsEnd: "Table des matières à la fin"
         },
+        notices: {
+            toggleUpdateError: "Erreur lors de la mise à jour du toggle {0} : {1}",
+            noExportPath: "Aucun chemin d'exportation sélectionné",
+            noCoverTemplate: "Aucun modèle de couverture sélectionné",
+            coverTemplateNotFound: "Modèle de couverture introuvable",
+            noActiveFile: "Aucun fichier actif",
+            coverGenerated: "Couverture générée : {0}",
+            coverGenerationFailed: "Échec de la génération de la couverture : {0}",
+            noTemplateSelected: "Aucun modèle sélectionné",
+            templateNotFound: "Modèle introuvable",
+            exportFailed: "Échec de l'export : {0}",
+            exportCompleted: "Export terminé avec succès",
+            exportCancelled: "Export annulé",
+            noTemplatesAvailable: "Aucun modèle disponible"
+        }
     }
 };
 
@@ -174,12 +219,12 @@ const es: Translations = {
     settings: {
         language: "Idioma",
         latexPath: "Ruta de instalación de XeLaTeX (dejar vacío para usar PATH del sistema)",
-        latexSection: "Configuración de XeLaTeX",
+        latexSection: "XeLaTeX",
         pandocPath: "Ruta de instalación de Pandoc (dejar vacío para usar PATH del sistema)",
-        pandocSection: "Configuración de Pandoc",
+        pandocSection: "Pandoc",
         pdftkPath: "Ruta de instalación de PDFtk (dejar vacío para usar PATH del sistema)",
-        pdftkSection: "Configuración de PDFtk",
-        generalSection: "Opciones generales",
+        pdftkSection: "PDFtk",
+        generalSection: "General",
         keepTempFiles: "Mantener archivos temporales"
     },
     view: {
@@ -211,12 +256,27 @@ const es: Translations = {
             cancelled: "Exportación cancelada"
         },
         toggles: {
-            coverPage: "Página de Cubierta",
-            halfTitlePage: "Página de Medio Título",
-            titlePage: "Página de Título",
-            tableOfContents: "Índice al Principio",
-            tableOfContentsEnd: "Índice al Final"
+            coverPage: "Página de cubierta",
+            halfTitlePage: "Página de medio título",
+            titlePage: "Página de título",
+            tableOfContents: "Índice al principio",
+            tableOfContentsEnd: "Índice al final"
         },
+        notices: {
+            toggleUpdateError: "Error al actualizar el toggle {0}: {1}",
+            noExportPath: "No se ha seleccionado ruta de exportación",
+            noCoverTemplate: "No se ha seleccionado plantilla de portada",
+            coverTemplateNotFound: "Plantilla de portada no encontrada",
+            noActiveFile: "No hay archivo activo",
+            coverGenerated: "Portada generada: {0}",
+            coverGenerationFailed: "Error al generar la portada: {0}",
+            noTemplateSelected: "No se ha seleccionado plantilla",
+            templateNotFound: "Plantilla no encontrada",
+            exportFailed: "Error en la exportación: {0}",
+            exportCompleted: "Exportación completada con éxito",
+            exportCancelled: "Exportación cancelada",
+            noTemplatesAvailable: "No hay plantillas disponibles"
+        }
     }
 };
 
@@ -229,12 +289,12 @@ const de: Translations = {
     settings: {
         language: "Sprache",
         latexPath: "XeLaTeX-Installationspfad (leer lassen für System-PATH)",
-        latexSection: "XeLaTeX-Konfiguration",
+        latexSection: "XeLaTeX",
         pandocPath: "Pandoc-Installationspfad (leer lassen für System-PATH)",
-        pandocSection: "Pandoc-Konfiguration",
+        pandocSection: "Pandoc",
         pdftkPath: "PDFtk-Installationspfad (leer lassen für System-PATH)",
-        pdftkSection: "PDFtk-Konfiguration",
-        generalSection: "Allgemeine Optionen",
+        pdftkSection: "PDFtk",
+        generalSection: "Allgemein",
         keepTempFiles: "Temporäre Dateien behalten"
     },
     view: {
@@ -272,6 +332,21 @@ const de: Translations = {
             tableOfContents: "Inhaltsverzeichnis am Anfang",
             tableOfContentsEnd: "Inhaltsverzeichnis am Ende"
         },
+        notices: {
+            toggleUpdateError: "Fehler beim Aktualisieren des Toggles {0}: {1}",
+            noExportPath: "Kein Exportpfad ausgewählt",
+            noCoverTemplate: "Keine Umschlagvorlage ausgewählt",
+            coverTemplateNotFound: "Umschlagvorlage nicht gefunden",
+            noActiveFile: "Keine aktive Datei",
+            coverGenerated: "Umschlag generiert: {0}",
+            coverGenerationFailed: "Umschlaggenerierung fehlgeschlagen: {0}",
+            noTemplateSelected: "Keine Vorlage ausgewählt",
+            templateNotFound: "Vorlage nicht gefunden",
+            exportFailed: "Export fehlgeschlagen: {0}",
+            exportCompleted: "Export erfolgreich abgeschlossen",
+            exportCancelled: "Export abgebrochen",
+            noTemplatesAvailable: "Keine Vorlagen verfügbar"
+        }
     }
 };
 
@@ -299,11 +374,12 @@ export function detectLanguage(): string {
     return 'en';
 }
 
-export function loadTranslations(language: string): Translations {
-    // Si la langue est 'auto', détecter la langue du système
-    const actualLanguage = language === 'auto' ? detectLanguage() : language;
+export function loadTranslations(): Translations {
+    const obsidianLocale = moment.locale();
+    const lang = obsidianLocale.split('-')[0];
     
-    switch (actualLanguage) {
+    // Vérifier si la langue est supportée
+    switch (lang) {
         case 'fr':
             return fr;
         case 'es':

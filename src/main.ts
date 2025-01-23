@@ -22,24 +22,10 @@ class BookBrewSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// Langue
-		new Setting(containerEl)
-			.setName(this.plugin.translations.settings.language)
-			.addDropdown(dropdown => dropdown
-				.addOption('auto', 'Auto')
-				.addOption('en', 'English')
-				.addOption('fr', 'Français')
-				.addOption('es', 'Español')
-				.addOption('de', 'Deutsch')
-				.setValue(this.plugin.settings.language)
-				.onChange(async (value) => {
-					this.plugin.settings.language = value;
-					this.plugin.translations = loadTranslations(value);
-					await this.plugin.saveSettings();
-				}));
-
 		// Section LaTeX
-		containerEl.createEl('h3', { text: this.plugin.translations.settings.latexSection });
+		new Setting(containerEl)
+			.setName(this.plugin.translations.settings.latexSection)
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(this.plugin.translations.settings.latexPath)
@@ -49,11 +35,12 @@ class BookBrewSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.latexPath = value;
 					await this.plugin.saveSettings();
-					await this.plugin.initLatex();
 				}));
 
 		// Section Pandoc
-		containerEl.createEl('h3', { text: this.plugin.translations.settings.pandocSection });
+		new Setting(containerEl)
+			.setName(this.plugin.translations.settings.pandocSection)
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(this.plugin.translations.settings.pandocPath)
@@ -66,7 +53,9 @@ class BookBrewSettingTab extends PluginSettingTab {
 				}));
 
 		// Section PDFtk
-		containerEl.createEl('h3', { text: this.plugin.translations.settings.pdftkSection });
+		new Setting(containerEl)
+			.setName(this.plugin.translations.settings.pdftkSection)
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(this.plugin.translations.settings.pdftkPath)
@@ -79,7 +68,9 @@ class BookBrewSettingTab extends PluginSettingTab {
 				}));
 
 		// Options générales
-		containerEl.createEl('h3', { text: this.plugin.translations.settings.generalSection });
+		new Setting(containerEl)
+			.setName(this.plugin.translations.settings.generalSection)
+			.setHeading();
 
 		new Setting(containerEl)
 			.setName(this.plugin.translations.settings.keepTempFiles)
@@ -103,23 +94,35 @@ class BookBrewSettingTab extends PluginSettingTab {
 }
 
 export default class BookBrewPlugin extends Plugin {
-	settings: BookBrewSettings;
-	translations: Translations;
+	public settings: BookBrewSettings;
+	public translations: Translations;
+	private view: BookBrewView;
 	latex: LatexService;
 	exportCoordinator: ExportCoordinator;
 	coverGenerator: CoverGenerator;
 
 	async onload() {
 		await this.loadSettings();
-		this.translations = loadTranslations(this.settings.language);
+		
+		// Charger les traductions en fonction de la langue d'Obsidian
+		this.translations = loadTranslations();
 		
 		// Initialize LaTeX service
-		const pluginPath = join(
-			(this.app.vault.adapter as any).basePath,
-			this.app.vault.configDir,
-			'plugins',
-			'bookbrew'
+		let pluginPath: string;
+		if (!(this.app.vault.adapter instanceof FileSystemAdapter)) {
+			throw new Error('BookBrew requires a local vault');
+		}
+
+		// S'assurer que manifest.dir existe
+		if (!this.manifest.dir) {
+			throw new Error('Plugin directory not found');
+		}
+
+		pluginPath = join(
+			this.app.vault.adapter.getBasePath(),
+			this.manifest.dir
 		);
+		
 		this.latex = new LatexService(
 			this.app.vault,
 			pluginPath,
@@ -149,7 +152,7 @@ export default class BookBrewPlugin extends Plugin {
 		// Register View
 		this.registerView(
 			VIEW_TYPE_BOOKBREW,
-			(leaf) => new BookBrewView(leaf, this)
+			(leaf: WorkspaceLeaf) => (this.view = new BookBrewView(leaf, this))
 		);
 
 		// Add ribbon icon
@@ -223,14 +226,14 @@ export default class BookBrewPlugin extends Plugin {
 		try {
 			const file = view.file;
 			if (!file) {
-				new Notice('No file is currently open');
+				new Notice(this.translations.view.notices.noActiveFile);
 				return;
 			}
 
 			// Utiliser le premier template disponible comme template par défaut
 			const templates = this.latex.templates;
 			if (templates.length === 0) {
-				new Notice('No templates available');
+				new Notice(this.translations.view.notices.noTemplatesAvailable);
 				return;
 			}
 			const defaultTemplate = templates[0];
@@ -246,9 +249,9 @@ export default class BookBrewPlugin extends Plugin {
 
 			// Lancer l'export
 			await this.exportCoordinator.export(exportOptions);
-			new Notice('Export completed successfully');
+			new Notice(this.translations.view.notices.exportCompleted);
 		} catch (error) {
-			new Notice(`Export failed: ${error.message}`);
+			new Notice(this.translations.view.notices.exportFailed.replace('{0}', error.message));
 		}
 	}
 

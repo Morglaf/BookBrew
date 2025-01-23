@@ -6,6 +6,5 @@
 	"description": "Transform Markdown notes into professionally typeset books using LaTeX templates, with support for imposition and cover generation.",
 	"author": "Morglaf",
 	"authorUrl": "https://github.com/Morglaf",
-	"isDesktopOnly": true,
-	"icon": "book-dashed"
+	"isDesktopOnly": true
 }
